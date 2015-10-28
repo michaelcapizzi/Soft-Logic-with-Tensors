@@ -96,7 +96,7 @@ class Model:
         #adds element to appropriate predicates in unaryPredicateMatrices and unaryPredicateLookUp
         if len(tupleToAdd[1]) != 0:
             for item in tupleToAdd[1]:
-                self.addToPredicate(tupleToAdd[0], item)
+                self.updatePredicate(tupleToAdd[0], item)
                 self.unaryPredicateLookUp[item].append(tupleToAdd[0])
 
 
@@ -105,7 +105,6 @@ class Model:
 
 
     #add predicate
-    #TODO build
     def addUnaryPredicate(self, predicate, listOfElements):
         #build predicate matrix
         predMatrix = np.zeros((2, self.sizeOfDomain))
@@ -116,8 +115,12 @@ class Model:
 
     #add an element to predicate matrix
         #prob = probability that element IS predicate
-    def addToPredicate(self, element, predicate, prob = 1):
-        self.unaryPredicateMatrices[predicate][:,self.elementLookUp[element]] = np.array([prob, 1 - prob])
+    def updatePredicate(self, element, predicate, prob = 1):
+        if prob == 0:
+            self.removeFromPredicate(element, predicate)
+        else:
+            self.unaryPredicateMatrices[predicate][:,self.elementLookUp[element]] = np.array([prob, 1 - prob])
+
 
     #remove an element from a predicate matrix
     def removeFromPredicate(self, element, predicate):
