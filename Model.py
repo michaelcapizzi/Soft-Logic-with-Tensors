@@ -67,6 +67,8 @@ class Model:
             self.unaryPredicateMatrices[pred] = predMatrix
 
 
+    #TODO build nary predicates
+
 ######################################################
 
 #modifying the world
