@@ -19,12 +19,23 @@ class Model:
         self.unaryPredicateMatrices = {}
         self.isTrue = np.array([1, 0]).reshape((2,1))
         self.isFalse = np.array([0, 1]).reshape((2,1))
-        #TODO add connectives
-        self.neg = np.array([
+        #connectives
+        self.negConnect = np.array([
                                 [0,1],
                                 [1,0]
                             ])
-
+        self.orConnect = np.array([                         #first row is first rank from left to right, top to bottom
+                                    [1,1,0,0],
+                                    [1,0,0,1]
+                                ]).reshape((2,2,2))
+        self.andConnect = np.array([
+                                    [1,0,0,1],              #first row is first rank from left to right, top to bottom
+                                    [0,0,1,1]
+                                ]).reshape((2,2,2))
+        self.conditionalConnect = np.array([                #first row is first rank from left to right, top to bottom
+                                            [1,0,0,1],
+                                            [1,1,0,0]
+                                        ]).reshape((2,2,2))
 
 ######################################################
 
@@ -118,3 +129,4 @@ class Model:
         return np.tensordot(elem1, elem2, axes=1)
         # predicate ==> (self.unaryPredicateMatrices[elem1], self.getOneHot(elem2))
         # negation ==> (self.neg, self.isTrue / self.isFalse)
+        #TODO figure out other connectives
