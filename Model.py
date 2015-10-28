@@ -5,18 +5,18 @@ import numpy as np
 class Model:
 
     #listOfElements = ["john", "chris", "tom"]
-    #listOfPredictes = [("is_mathematician", ["john", "chris"])]
-    def __init__(self, listOfElements, listOfPredicates = []):
+    #dictionaryOfUnaryPredicates = {"is_mathematician": ["john", "chris"]}
+    def __init__(self, listOfElements, dictionaryOfUnaryPredicates = {}):
         #domain and predicates
         self.elements = listOfElements
         self.elementLookUp = {}
-        self.predicates = listOfPredicates
-        self.predicateLookUp = {}
+        self.unaryPredicateLookUp = dictionaryOfUnaryPredicates
         self.sizeOfDomain = len(self.elements)
         self.domainMatrix = np.zeros((self.sizeOfDomain, self.sizeOfDomain))        #each row is a one-hot
         #truth conditions
-        self.isTrue = np.array([1, 0]).transpose()
-        self.isFalse = np.array([0, 1]).transpose()
+        self.predicateMatrices = {}
+        self.isTrue = np.array([1, 0]).reshape((2,1))
+        self.isFalse = np.array([0, 1]).reshape((2,1))
         #TODO add connectives
 
 ######################################################
@@ -36,23 +36,25 @@ class Model:
             self.domainMatrix[:,elem] = oneHot
 
 
-    # #TODO build
-    # #build predicates and lookup dictionary
-    # def buildPredicates(self):
-    #     for pred in range(len(self.unaryPredicates)):
-    #         #build predicate matrix
-    #         predMatrix = np.zeros((2, self.sizeOfDomain))
-    #         for elem in self.elements:
-    #             if elem in self.unaryPredicates[pred][1]:       #if the predicate applies to the element
-    #                 #
-    #             else:                                           #if the predicate does not apply to element
-    #                 #
+    #TODO build
+    #build unary predicates
+    def buildUnaryPredicates(self):
+        for pred in self.unaryPredicateLookUp.keys():
+            #build predicate matrix
+            predMatrix = np.zeros((2, self.sizeOfDomain))
+            for elem in self.elements:
+                if elem in self.unaryPredicateLookUp[pred]:      #if the predicate applies to the element
+                    predMatrix[:,self.elementLookUp[elem]] = self.isTrue.T
+                else:                                           #if the predicate does not apply to element
+                    predMatrix[:,self.elementLookUp[elem]] = self.isFalse.T
+            self.predicateMatrices[pred] = predMatrix
 
 
 ######################################################
 
 #modifying the world
 
+    #TODO handle addition to predicates when new element added
     #add an element to domain
     def addToDomain(self, element):
 
@@ -67,6 +69,8 @@ class Model:
         self.domainMatrix = np.insert(self.domainMatrix, self.domainMatrix.shape[0], 0, 0)      #add a row of zeros
         self.domainMatrix[self.domainMatrix.shape[0] - 1][self.domainMatrix.shape[1] - 1] = 1         #update one-hot vector
 
+    #TODO build
+    # def addToPredicate
 
 ######################################################
 
