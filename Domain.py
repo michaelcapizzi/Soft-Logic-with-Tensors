@@ -33,5 +33,5 @@ class Domain:
         #add to self.domainMatrix
         np.insert(self.domainMatrix, self.domainMatrix.shape[1], 0, 1)      #add a column of zeros
         np.insert(self.domainMatrix, self.domainMatrix.shape[0], 0, 0)      #add a row of zeros
-        self.domainMatrix[self.sizeOfDomain][self.sizeOfDomain] = 1
+        self.domainMatrix[self.sizeOfDomain][self.sizeOfDomain] = 1         #update one-hot vector
 
