@@ -14,7 +14,7 @@ class Model:
         self.sizeOfDomain = len(self.elements)
         self.domainMatrix = np.zeros((self.sizeOfDomain, self.sizeOfDomain))        #each row is a one-hot
         #truth conditions
-        self.predicateMatrices = {}
+        self.unaryPredicateMatrices = {}
         self.isTrue = np.array([1, 0]).reshape((2,1))
         self.isFalse = np.array([0, 1]).reshape((2,1))
         #TODO add connectives
@@ -46,7 +46,7 @@ class Model:
                     predMatrix[:,self.elementLookUp[elem]] = self.isTrue.T
                 else:                                           #if the predicate does not apply to element
                     predMatrix[:,self.elementLookUp[elem]] = self.isFalse.T
-            self.predicateMatrices[pred] = predMatrix
+            self.unaryPredicateMatrices[pred] = predMatrix
 
 
 ######################################################
@@ -67,19 +67,27 @@ class Model:
         self.domainMatrix = np.insert(self.domainMatrix, self.domainMatrix.shape[1], 0, 1)      #add a column of zeros
         self.domainMatrix = np.insert(self.domainMatrix, self.domainMatrix.shape[0], 0, 0)      #add a row of zeros
         self.domainMatrix[self.domainMatrix.shape[0] - 1][self.domainMatrix.shape[1] - 1] = 1         #update one-hot vector
+
     #predicates
-        for pred in tupleToAdd[1]:
-            self.addToPredicate(tuple[0], pred)
+        #build column in all predicates
+        for pred in self.unaryPredicateMatrices.keys():
+            self.unaryPredicateMatrices[pred] = np.insert(self.unaryPredicateMatrices[pred], self.unaryPredicateMatrices[pred].shape[1], 0, 1)
+
+        #adds element to appropriate predicates in unaryPredicateMatrices and unaryPredicateLookUp
+        if len(tupleToAdd[1]) != 0:
+            for item in tupleToAdd[1]:
+                self.addToPredicate(tupleToAdd[0], item)
+                self.unaryPredicateLookUp[item].append(tupleToAdd[0])
 
 
     #add an element to predicate matrix
     def addToPredicate(self, element, predicate):
-        self.predicateMatrices[predicate][:,self.elementLookUp[element]] = self.isTrue.T
+        self.unaryPredicateMatrices[predicate][:,self.elementLookUp[element]] = self.isTrue.T
 
 
     #remove an element from a predicate matrix
     def removeFromPredicate(self, element, predicate):
-        self.predicateMatrices[predicate][:,self.elementLookUp[element]] = self.isFalse.T
+        self.unaryPredicateMatrices[predicate][:,self.elementLookUp[element]] = self.isFalse.T
 
 
 ######################################################
