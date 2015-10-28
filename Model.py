@@ -101,4 +101,12 @@ class Model:
 
     #get one hot vector
     def getOneHot(self, element):
-        self.domainMatrix[:,self.elementLookUp[element]].reshape(self.sizeOfDomain, 1)
+        return self.domainMatrix[:,self.elementLookUp[element]].reshape(self.sizeOfDomain, 1)
+
+
+######################################################
+
+#determining truth
+
+    def calculateTruthValue(self, predicate, element):
+        return np.tensordot(self.unaryPredicateMatrices[predicate], self.getOneHot(element))
