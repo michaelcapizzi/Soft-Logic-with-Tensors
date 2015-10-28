@@ -104,11 +104,20 @@ class Model:
     #TODO build
 
 
+    #add predicate
+    #TODO build
+    def addUnaryPredicate(self, predicate, listOfElements):
+        #build predicate matrix
+        predMatrix = np.zeros((2, self.sizeOfDomain))
+        for elem in listOfElements:
+            predMatrix[:,self.elementLookUp[elem]] = self.isTrue.T
+        self.unaryPredicateMatrices[predicate] = predMatrix
+
 
     #add an element to predicate matrix
-    def addToPredicate(self, element, predicate):
-        self.unaryPredicateMatrices[predicate][:,self.elementLookUp[element]] = self.isTrue.T
-
+        #prob = probability that element IS predicate
+    def addToPredicate(self, element, predicate, prob = 1):
+        self.unaryPredicateMatrices[predicate][:,self.elementLookUp[element]] = np.array([prob, 1 - prob])
 
     #remove an element from a predicate matrix
     def removeFromPredicate(self, element, predicate):
