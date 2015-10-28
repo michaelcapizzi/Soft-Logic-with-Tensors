@@ -7,11 +7,12 @@ class Model:
         #listOfElements = ["john", "chris", "tom"]
         #dictionaryOfUnaryPredicates = {"is_mathematician": ["john", "chris"]}
     def __init__(self, listOfElements, dictionaryOfUnaryPredicates = {}):
-        #domain and predicates
+        #domain
         self.elements = listOfElements
         self.elementLookUp = {}
-        self.unaryPredicateLookUp = dictionaryOfUnaryPredicates
         self.sizeOfDomain = len(self.elements)
+        #unary predicates
+        self.unaryPredicateLookUp = dictionaryOfUnaryPredicates
         self.domainMatrix = np.zeros((self.sizeOfDomain, self.sizeOfDomain))        #each row is a one-hot
         #truth conditions
         self.unaryPredicateMatrices = {}
