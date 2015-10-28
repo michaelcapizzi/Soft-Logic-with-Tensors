@@ -81,6 +81,11 @@ class Model:
                 self.unaryPredicateLookUp[item].append(tupleToAdd[0])
 
 
+    #remove from domain
+    #TODO build
+
+
+
     #add an element to predicate matrix
     def addToPredicate(self, element, predicate):
         self.unaryPredicateMatrices[predicate][:,self.elementLookUp[element]] = self.isTrue.T
@@ -89,7 +94,6 @@ class Model:
     #remove an element from a predicate matrix
     def removeFromPredicate(self, element, predicate):
         self.unaryPredicateMatrices[predicate][:,self.elementLookUp[element]] = self.isFalse.T
-
 
 ######################################################
 
