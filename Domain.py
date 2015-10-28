@@ -8,17 +8,17 @@ class Domain:
     #listOfPredictes = [("is_mathematician", ["john", "chris"])]
     def __init__(self, listOfElements, listOfUnaryPredicates = []):
         self.elements = listOfElements
-        self.predicates = listOfUnaryPredicates
+        self.elementLookUp = {}
+        self.unaryPredicates = listOfUnaryPredicates
+        self.unaryPredicateLookUp = {}
         self.sizeOfDomain = len(self.elements)
-        self.domainDictionary = {}
         self.domainMatrix = np.zeros((self.sizeOfDomain, self.sizeOfDomain))        #each row is a one-hot
-        self.predicateDictionary = {}
 
     #build domain and lookup dictionary
     def buildDomain(self):
         for elem in range(self.sizeOfDomain):
             #add to lookup dictionary
-            self.domainDictionary[self.elements[elem]] = elem
+            self.elementLookUp[self.elements[elem]] = elem
             #build one-hot vector
             oneHot = np.zeros(self.sizeOfDomain)
             oneHot[elem] = 1
@@ -39,7 +39,7 @@ class Domain:
         #update size of domain
         self.sizeOfDomain += 1
         #add to self.domainDictionary
-        self.domainDictionary[element] = self.sizeOfDomain - 1
+        self.elementLookUp[element] = self.sizeOfDomain - 1
         #add to self.domainMatrix
         self.domainMatrix = np.insert(self.domainMatrix, self.domainMatrix.shape[1], 0, 1)      #add a column of zeros
         self.domainMatrix = np.insert(self.domainMatrix, self.domainMatrix.shape[0], 0, 0)      #add a row of zeros
