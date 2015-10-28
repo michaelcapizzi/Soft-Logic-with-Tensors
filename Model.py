@@ -1,6 +1,7 @@
 import numpy as np
 
-#class for a domain
+#class for a model
+#TODO allow for uncertainty in calculations (i.e., not 1,0 and 0,1 for truth
 
 class Model:
 
@@ -19,6 +20,11 @@ class Model:
         self.isTrue = np.array([1, 0]).reshape((2,1))
         self.isFalse = np.array([0, 1]).reshape((2,1))
         #TODO add connectives
+        self.neg = np.array([
+                                [0,1],
+                                [1,0]
+                            ])
+
 
 ######################################################
 
@@ -108,5 +114,7 @@ class Model:
 
 #determining truth
 
-    def calculateTruthValue(self, predicate, element):
-        return np.tensordot(self.unaryPredicateMatrices[predicate], self.getOneHot(element))
+    def calculateTruthValue(self, elem1, elem2):
+        return np.tensordot(elem1, elem2, axes=1)
+        # predicate ==> (self.unaryPredicateMatrices[elem1], self.getOneHot(elem2))
+        # negation ==> (self.neg, self.isTrue / self.isFalse)
