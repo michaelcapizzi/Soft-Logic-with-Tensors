@@ -1,7 +1,7 @@
 import numpy as np
 
 #class for a model
-#TODO allow for uncertainty in calculations (i.e., not 1,0 and 0,1 for truth
+#TODO allow for uncertainty in calculations (i.e., not 1,0 and 0,1 for truth)
 
 class Model:
 
@@ -134,6 +134,9 @@ class Model:
     def getOneHot(self, element):
         return self.domainMatrix[:,self.elementLookUp[element]].reshape(self.sizeOfDomain, 1)
 
+    #get a predicate
+    def getUnaryPredicate(self, predicate):
+        return self.unaryPredicateMatrices[predicate]
 
 ######################################################
 
@@ -141,6 +144,22 @@ class Model:
 
     def calculateTruthValue(self, elem1, elem2):
         return np.tensordot(elem1, elem2, axes=1)
-        # predicate ==> (self.unaryPredicateMatrices[elem1], self.getOneHot(elem2))
+        # predicate ==> (self.getUnaryPredicate(elem1), self.getOneHot(elem2))
         # negation ==> (self.neg, self.isTrue / self.isFalse)
         #TODO figure out other connectives
+
+
+##############################################################
+elements = ["john", "chris", "tom"]
+unaryPredicates = {"is_mathematician": ["john", "chris"]}
+
+mod = Model(["john", "chris", "tom"], {"is_mathematician": ["john", "chris"], "is_ugly": ["john", "chris"]})
+
+mod.buildDomain()
+mod.buildUnaryPredicates()
+
+#np.tensordot(mod.getUnaryPredicate("is_mathematician"), mod.getOneHot("john"), axes=1)
+#np.tensordot(mod.negConnect, mod.isTrue, axes=1)
+#np.tensordot(mod.negConnect, np.tensordot(mod.negConnect, mod.isTrue, axes=1), axes=1)
+#np.tensordot(mod.andConnect, mod.isTrue, axes=1)
+#np.tensordot(np.tensordot(mod.andConnect, mod.isTrue, axes=1).reshape((2,2)), mod.isFalse, axes=1)
