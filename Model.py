@@ -163,3 +163,6 @@ mod.buildUnaryPredicates()
 #np.tensordot(mod.negConnect, np.tensordot(mod.negConnect, mod.isTrue, axes=1), axes=1)
 #np.tensordot(mod.andConnect, mod.isTrue, axes=1)
 #np.tensordot(np.tensordot(mod.andConnect, mod.isTrue, axes=1).reshape((2,2)), mod.isFalse, axes=1)
+
+#lovesManual = np.array([[[1,1],[0,1]],[[0,0],[1,0]]])
+#np.tensordot(np.tensordot(lovesManual, mod2.getOneHot("mary"),axes=1).reshape((2,2)), mod2.getOneHot("john"),axes=1)
