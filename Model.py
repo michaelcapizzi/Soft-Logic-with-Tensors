@@ -72,14 +72,28 @@ class Model:
             self.unaryPredicateMatrices[pred] = predMatrix
 
 
-    #TODO build nary predicates
+    #TODO test building method of binary predicate
     def buildBinaryPredicates(self):
         for pred in self.binaryPredicateLookUp.keys():
             #build predicate tensor
             predTensor = np.zeros((2, self.sizeOfDomain, self.sizeOfDomain))
             #get cartesian product
             cartProd = list(itertools.product(*[self.elements for i in [1,2]]))
+            for pair in cartProd:
+                if pair in self.binaryPredicateLookUp[pred]:    #if the predicate applies to the ordered pair
+                    #fill in true side of tensor (dim = 1) with a 1
+                    predTensor[0][self.elementLookUp[pair[0]]][self.elementLookUp[pair[1]]] = 1
+                    #fill in false side of tensor (dim = 2) with a 0
+                    predTensor[1][self.elementLookUp[pair[0]]][self.elementLookUp[pair[1]]] = 0
+            else:                                           #if the predicate doesn't apply to ordered pair
+                #fill in true side of tensor (dim = 1) with a 0
+                predTensor[0][self.elementLookUp[pair[0]]][self.elementLookUp[pair[1]]] = 0
+                #fill in false side of tensor (dim = 2) with a 1
+                predTensor[1][self.elementLookUp[pair[0]]][self.elementLookUp[pair[1]]] = 1
+            self.binaryPredicateTensors[pred] = predTensor
+
 ######################################################
+
 
 #modifying the world
 
