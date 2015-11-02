@@ -1,4 +1,5 @@
 import numpy as np
+import itertools
 
 #class for a model
 #TODO allow for uncertainty in calculations (i.e., not 1,0 and 0,1 for truth)
@@ -7,16 +8,20 @@ class Model:
 
         #listOfElements = ["john", "chris", "tom"]
         #dictionaryOfUnaryPredicates = {"is_mathematician": ["john", "chris"]}
-    def __init__(self, listOfElements, dictionaryOfUnaryPredicates = {}):
+        #dictionaryOfBinaryPredicates = {"loves": [("john", "john"), ("chris", "john)]}
+    def __init__(self, listOfElements, dictionaryOfUnaryPredicates = {}, dictionaryOfBinaryPredicates = {}):
         #domain
         self.elements = listOfElements
         self.elementLookUp = {}
         self.sizeOfDomain = len(self.elements)
+        self.domainMatrix = np.zeros((self.sizeOfDomain, self.sizeOfDomain))        #each row is a one-hot
         #unary predicates
         self.unaryPredicateLookUp = dictionaryOfUnaryPredicates
-        self.domainMatrix = np.zeros((self.sizeOfDomain, self.sizeOfDomain))        #each row is a one-hot
-        #truth conditions
         self.unaryPredicateMatrices = {}
+        #binary predicates
+        self.binaryPredicateLookUp = dictionaryOfBinaryPredicates
+        self.binaryPredicateTensors = {}
+        #truth conditions
         self.isTrue = np.array([1, 0]).reshape((2,1))
         self.isFalse = np.array([0, 1]).reshape((2,1))
         #connectives
@@ -68,7 +73,12 @@ class Model:
 
 
     #TODO build nary predicates
-
+    def buildBinaryPredicates(self):
+        for pred in self.binaryPredicateLookUp.keys():
+            #build predicate tensor
+            predTensor = np.zeros((2, self.sizeOfDomain, self.sizeOfDomain))
+            #get cartesian product
+            cartProd = list(itertools.product(*[self.elements for i in [1,2]]))
 ######################################################
 
 #modifying the world
