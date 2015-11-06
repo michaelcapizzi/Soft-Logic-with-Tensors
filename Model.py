@@ -46,6 +46,13 @@ class Model:
 
 #building the model
 
+    #build entire model
+    def buildAll(self):
+
+        self.buildDomain()
+        self.buildUnaryPredicates()
+        self.buildBinaryPredicates()
+
     #build domain and lookup dictionary
     def buildDomain(self):
         for elem in range(self.sizeOfDomain):
@@ -72,7 +79,7 @@ class Model:
             self.unaryPredicateMatrices[pred] = predMatrix
 
 
-    #TODO test building method of binary predicate
+    #TODO fix - not right
     def buildBinaryPredicates(self):
         for pred in self.binaryPredicateLookUp.keys():
             #build predicate tensor
@@ -81,19 +88,17 @@ class Model:
             cartProd = list(itertools.product(*[self.elements for i in [1,2]]))
             for pair in cartProd:
                 if pair in self.binaryPredicateLookUp[pred]:    #if the predicate applies to the ordered pair
-                    #fill in true side of tensor (dim = 1) with a 1
-                    predTensor[0][self.elementLookUp[pair[0]]][self.elementLookUp[pair[1]]] = 1
-                    #fill in false side of tensor (dim = 2) with a 0
-                    predTensor[1][self.elementLookUp[pair[0]]][self.elementLookUp[pair[1]]] = 0
-            else:                                           #if the predicate doesn't apply to ordered pair
-                #fill in true side of tensor (dim = 1) with a 0
-                predTensor[0][self.elementLookUp[pair[0]]][self.elementLookUp[pair[1]]] = 0
-                #fill in false side of tensor (dim = 2) with a 1
-                predTensor[1][self.elementLookUp[pair[0]]][self.elementLookUp[pair[1]]] = 1
+                    #fill in true side of tensor (dim = 0) with a 1
+                        #[0][obj][subj] = 1
+                    predTensor[0][self.elementLookUp[pair[1]]][self.elementLookUp[pair[0]]] = 1
+                    #false side of tensor (dim =1 ) will remain a 0
+                else:                                           #if the predicate doesn't apply to ordered pair
+                    #true size of tensor (dim = 0) will remain a 0
+                    #fill in false side of tensor (dim = 1) with a 1
+                    predTensor[1][self.elementLookUp[pair[1]]][self.elementLookUp[pair[0]]] = 1
             self.binaryPredicateTensors[pred] = predTensor
 
 ######################################################
-
 
 #modifying the world
 
@@ -137,6 +142,7 @@ class Model:
         self.unaryPredicateMatrices[predicate] = predMatrix
 
 
+    #TODO does this work for binary?
     #add an element to predicate matrix
         #prob = probability that element IS predicate
     def updatePredicate(self, element, predicate, prob = 1):
@@ -145,7 +151,7 @@ class Model:
         else:
             self.unaryPredicateMatrices[predicate][:,self.elementLookUp[element]] = np.array([prob, 1 - prob])
 
-
+    #TODO does this work for binary?
     #remove an element from a predicate matrix
     def removeFromPredicate(self, element, predicate):
         self.unaryPredicateMatrices[predicate][:,self.elementLookUp[element]] = self.isFalse.T
@@ -162,6 +168,9 @@ class Model:
     def getUnaryPredicate(self, predicate):
         return self.unaryPredicateMatrices[predicate]
 
+    #TODO build
+    # def getBinaryPredicate
+
 ######################################################
 
 #determining truth
@@ -174,13 +183,6 @@ class Model:
 
 
 ##############################################################
-elements = ["john", "chris", "tom"]
-unaryPredicates = {"is_mathematician": ["john", "chris"]}
-
-mod = Model(["john", "chris", "tom"], {"is_mathematician": ["john", "chris"], "is_ugly": ["john", "chris"]})
-
-mod.buildDomain()
-mod.buildUnaryPredicates()
 
 #np.tensordot(mod.getUnaryPredicate("is_mathematician"), mod.getOneHot("john"), axes=1)
 #np.tensordot(mod.negConnect, mod.isTrue, axes=1)
