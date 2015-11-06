@@ -168,13 +168,14 @@ class Model:
     def getUnaryPredicate(self, predicate):
         return self.unaryPredicateMatrices[predicate]
 
-    #TODO build
-    # def getBinaryPredicate
+    def getBinaryPredicate(self, predicate):
+        return self.binaryPredicateTensors[predicate]
 
 ######################################################
 
 #determining truth
 
+    #TODO figure out how to build one method for all possible
     def calculateTruthValue(self, elem1, elem2):
         return np.tensordot(elem1, elem2, axes=1)
         # predicate ==> (self.getUnaryPredicate(elem1), self.getOneHot(elem2))
@@ -188,8 +189,8 @@ class Model:
 #np.tensordot(mod.getUnaryPredicate("is_mathematician"), mod.getOneHot("john"), axes=1)
 
 #neg
-#TODO test  #np.tensordot(mod.negConnect, mod.isTrue, axes=1)
-#TODO test  #np.tensordot(mod.negConnect, np.tensordot(mod.negConnect, mod.isTrue, axes=1), axes=1)
+#np.tensordot(mod.negConnect, mod.isTrue, axes=1)
+#np.tensordot(mod.negConnect, np.tensordot(mod.negConnect, mod.isTrue, axes=1), axes=1)
 
 #connective
 #np.tensordot(np.tensordot(mod.andConnect, mod.isTrue, axes=1).reshape((2,2)).T, mod.isFalse, axes=1)
