@@ -177,13 +177,15 @@ class Model:
             self.unaryPredicateMatrices[predicate][:,self.elementLookUp[element]] = np.array([prob, 1 - prob])
 
 
-    #TODO build
+    #TODO test
     #add an element to predicate tensor
         #prob = probability that element IS predicate
-    # def updateBinaryPredicate(self, tuple, predicate, prob = 1):
-    #     if prob == 0:
-    #         self.removeBinaryPredicate(tuple, predicate)
-    #     else:
+    def updateBinaryPredicate(self, pair, predicate, prob = 1):
+        if prob == 0:
+            self.removeBinaryPredicate(pair, predicate)
+        else:
+            self.binaryPredicateTensors[0][self.elementLookUp[pair[1]]][self.elementLookUp[pair[0]]] = prob
+            self.binaryPredicateTensors[1][self.elementLookUp[pair[1]]][self.elementLookUp[pair[0]]] = 1 - prob
 
 
 
