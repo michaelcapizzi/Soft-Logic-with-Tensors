@@ -79,7 +79,6 @@ class Model:
             self.unaryPredicateMatrices[pred] = predMatrix
 
 
-    #TODO fix - not right
     def buildBinaryPredicates(self):
         for pred in self.binaryPredicateLookUp.keys():
             #build predicate tensor
@@ -101,7 +100,9 @@ class Model:
 ######################################################
 
 #modifying the world
+#TODO update to handle binary predicates!
 
+    #TODO update to handle added elements in binary predicates
     #add an element to domain and necessary predicates
         #tupleToAdd => (element, [listOfPredicates])
     def addToDomain(self, tupleToAdd):
@@ -125,7 +126,7 @@ class Model:
         #adds element to appropriate predicates in unaryPredicateMatrices and unaryPredicateLookUp
         if len(tupleToAdd[1]) != 0:
             for item in tupleToAdd[1]:
-                self.updatePredicate(tupleToAdd[0], item)
+                self.updateUnaryPredicate(tupleToAdd[0], item)
                 self.unaryPredicateLookUp[item].append(tupleToAdd[0])
 
 
@@ -133,28 +134,82 @@ class Model:
     #TODO build
 
 
-    #add predicate
+    #add unary predicate
     def addUnaryPredicate(self, predicate, listOfElements):
         #build predicate matrix
         predMatrix = np.zeros((2, self.sizeOfDomain))
         for elem in listOfElements:
             predMatrix[:,self.elementLookUp[elem]] = self.isTrue.T
+        #add matrix
         self.unaryPredicateMatrices[predicate] = predMatrix
+        #add to lookup
+        self.unaryPredicateLookUp[predicate] = listOfElements
 
 
-    #TODO does this work for binary?
+    #add binary predicate
+    def addBinaryPredicate(self, predicate, listOfTuples):
+        #build predicate tensor
+        predTensor = np.zeros((2, self.sizeOfDomain, self.sizeOfDomain))
+        #get cartesian product
+        cartProd = list(itertools.product(*[self.elements for i in [1,2]]))
+        for pair in cartProd:
+            if pair in listOfTuples:    #if the predicate applies to the ordered pair
+                #fill in true side of tensor (dim = 0) with a 1
+                #[0][obj][subj] = 1
+                predTensor[0][self.elementLookUp[pair[1]]][self.elementLookUp[pair[0]]] = 1
+                #false side of tensor (dim =1 ) will remain a 0
+            else:                                           #if the predicate doesn't apply to ordered pair
+                #true size of tensor (dim = 0) will remain a 0
+                #fill in false side of tensor (dim = 1) with a 1
+                predTensor[1][self.elementLookUp[pair[1]]][self.elementLookUp[pair[0]]] = 1
+        #add tensor
+        self.binaryPredicateTensors[predicate] = predTensor
+        #add to lookup
+        self.binaryPredicateLookUp[predicate] = listOfTuples
+
+
     #add an element to predicate matrix
         #prob = probability that element IS predicate
-    def updatePredicate(self, element, predicate, prob = 1):
+    def updateUnaryPredicate(self, element, predicate, prob = 1):
         if prob == 0:
-            self.removeFromPredicate(element, predicate)
+            self.removeUnaryPredicate(element, predicate)
         else:
             self.unaryPredicateMatrices[predicate][:,self.elementLookUp[element]] = np.array([prob, 1 - prob])
 
-    #TODO does this work for binary?
-    #remove an element from a predicate matrix
-    def removeFromPredicate(self, element, predicate):
+
+    #TODO build
+    #add an element to predicate tensor
+        #prob = probability that element IS predicate
+    # def updateBinaryPredicate(self, tuple, predicate, prob = 1):
+    #     if prob == 0:
+    #         self.removeBinaryPredicate(tuple, predicate)
+    #     else:
+
+
+
+    #remove an element from unary predicate matrix
+    def removeUnaryPredicate(self, element, predicate):
+        #update in matrix
         self.unaryPredicateMatrices[predicate][:,self.elementLookUp[element]] = self.isFalse.T
+        #update in lookup
+        # self.unaryPredicateLookUp[predicate] = self.unaryPredicateLookUp[predicate].remove(element)
+        self.unaryPredicateLookUp[predicate].remove(element)
+
+
+    #TODO test removal maintains truth
+    def removeBinaryPredicate(self, pair, predicate):
+        #build temporary tensor
+        updatedTensor = self.binaryPredicateTensors[predicate]
+
+        #update temporary tensor
+        updatedTensor[0][self.elementLookUp[pair[1]]][self.elementLookUp[pair[0]]] = 0
+        updatedTensor[1][self.elementLookUp[pair[1]]][self.elementLookUp[pair[0]]] = 1
+
+        #reassign as permanent tensor
+        self.binaryPredicateTensors[predicate] = updatedTensor
+
+        #update in lookup
+        self.binaryPredicateLookUp[predicate].remove(pair)
 
 ######################################################
 
