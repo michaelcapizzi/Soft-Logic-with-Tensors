@@ -1,6 +1,6 @@
 __author__ = 'mcapizzi'
 
-import gensim
+from gensim import models
 import itertools
 
 class Embedding:
@@ -19,11 +19,11 @@ class Embedding:
 
 
     def useDefault(self):
-        self.embeddingModel = gensim.models.Word2Vec.load_word2vec_format(fname=self.W2Vpath, binary=True, norm_only=True)
+        self.embeddingModel = models.Word2Vec.load_word2vec_format(fname=self.W2Vpath, binary=True, norm_only=True)
 
 
     def buildModel(self, listOfSentences, size, window, min_count, workers, negative):
-        self.embeddingModel = gensim.models.word2vec.Word2Vec(sentences=listOfSentences, size=size, window=window, min_count=min_count, workers=workers, negative=negative)
+        self.embeddingModel = models.word2vec.Word2Vec(sentences=listOfSentences, size=size, window=window, min_count=min_count, workers=workers, negative=negative)
 
 
     def train(self, listOfSentences):
