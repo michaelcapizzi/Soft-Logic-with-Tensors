@@ -1,11 +1,13 @@
+from nltk.parse.stanford import StanfordParser
+
 __author__ = 'mcapizzi'
 
-#import nltk as nl
+import nltk as nl
 
-class Data:
-
-    def __init__(self, textFile):
-        self.file = textFile
+# class Data:
+#
+#     def __init__(self, textFile):
+#         self.file = textFile
 
 #http://www.nltk.org/_modules/nltk/tokenize.html
 
@@ -16,4 +18,4 @@ class Data:
 #with stanford parser
 #http://www.nltk.org/_modules/nltk/parse/stanford.html
 
-
+nl.parse.dependencygraph
