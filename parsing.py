@@ -11,6 +11,8 @@ parser = stanford.StanfordParser("/home/mcapizzi/Github/Semantics/stanford-parse
 #https://github.com/dmcc/PyStanfordDependencies/blob/master/README.rst
 sd = StanfordDependencies.get_instance(jar_filename="/home/mcapizzi/Github/Semantics/stanford-parser-full-2014-08-27/stanford-parser.jar", backend="subprocess")
 
+#to lemmatize
+#http://textminingonline.com/dive-into-nltk-part-iv-stemming-and-lemmatization
 
 #to parse raw text
 # z = parser.raw_parse(TEXT)
