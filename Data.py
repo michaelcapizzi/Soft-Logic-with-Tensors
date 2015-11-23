@@ -21,15 +21,14 @@ class Data:
             #flatten and add to allSentences
             [self.allSentences.append(i.rstrip()) for i in tokenizedSentences]
 
-    #removes \n and <doc and titles
+    #removes \n and html lines and titles
     def cleanAllSentences(self):
-        newLine = "\n"
-        docRegex = "<doc"
+        docRegex = r'[<>]'
         titleRegex = r'^\w+'
-        self.allSentences = filter(lambda x:    x != newLine or
-                                                x.startswith(docRegex) == False or
-                                                x.#TODO add titleRegex
-                                                            self.allSentences)
+        self.allSentences = filter( lambda x:   x != "" and
+                                                not re.search(docRegex, x, re.U) and
+                                                not re.search(titleRegex, x, re.U),
+                                    self.allSentences)
 
 
 #for line in f:
