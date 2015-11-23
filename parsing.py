@@ -1,10 +1,10 @@
-# from practnlptools import tools
 
 __author__ = 'mcapizzi'
 
 
 import StanfordDependencies
 from nltk.parse import stanford
+from practnlptools import tools
 
 ############################################
 #using Stanford parser and dependency wrapper
