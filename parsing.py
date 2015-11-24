@@ -26,11 +26,10 @@ sd = StanfordDependencies.get_instance(jar_filename="/home/mcapizzi/Github/Seman
 # zPretty = z[0].pprint()
 
 #convert to dependency
-#sd.convert_tree(zPretty)
-    #convert_trees for batch!
+# sd.convert_tree(zPretty)
+    #convert_trees for batch! ==> sd.convert_trees([list of pretty trees]
 
-#TODO
-#build method for extracting tuples
+
 
 
 

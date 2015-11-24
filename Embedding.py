@@ -19,7 +19,7 @@ class Embedding:
         self.embeddingModel = None
         self.trainingSentences = []
         self.total_words = len(list(itertools.chain(*self.trainingSentences)))
-        self.corpus = 0
+        self.corpus = corpora.TextCorpus()
 
 ####
 #use GoogleNews vectors
@@ -37,9 +37,7 @@ class Embedding:
 
     #train directly from wikipedia corpus
     def trainFromCorpus(self, window, min_count, workers, negative, size=200):
-        self.embeddingModel = models.word2vec.Word2Vec(sentences=self.trainingSentences, size=size, window=window, min_count=min_count, workers=workers, negative=negative)
-        inputText = self.corpus.get_texts()
-        #TODO add preprocessing (lowercase, lemmatize?)
+        self.embeddingModel = models.word2vec.Word2Vec(size=size, window=window, min_count=min_count, workers=workers, negative=negative)
         self.embeddingModel.build_vocab(self.corpus.get_texts())
         self.embeddingModel.train(self.corpus.get_texts())
 
@@ -51,14 +49,14 @@ class Embedding:
     def addTrainingSentences(self, listOfSentences):
         self.trainingSentences = listOfSentences
 
-
+    #TODO test
     #build a model with pre-loaded sentences
     def buildModel(self, window, min_count, workers, negative, size=200):
         self.embeddingModel = models.word2vec.Word2Vec(sentences=self.trainingSentences, size=size, window=window, min_count=min_count, workers=workers, negative=negative)
         #when all training is complete - saves memory
         self.embeddingModel.init_sims(replace=True)
 
-
+    #TODO test
     #train line by line in stream
     def trainLineByLine(self, stream, window, min_count, workers, negative, size=200):
         #intialize model
@@ -92,17 +90,15 @@ class Embedding:
         self.embeddingModel.save_word2vec_format(fname)
 
 
-    #TODO test using sampleModelC.txt
-    #TODO test using sampleModelC.txt.gz
     #load model from file
     def loadModel(self, fname):
-        self.embeddingModel.load_word2vec_format(fname)
+        self.embeddingModel = models.Word2Vec.load_word2vec_format(fname, binary=False, norm_only=True)
 
 ####
 #access vector
 ####
 
-    #TODO test
+
     #gets vector for a given word
         #if not in dictionary returns none
     def getVector(self, word):
