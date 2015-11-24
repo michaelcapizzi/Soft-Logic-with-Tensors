@@ -7,11 +7,11 @@ import nltk
 
 
 class Embedding:
-"""Generates the word2vec vectors to be used:
+    """Generates the word2vec vectors to be used:
     (1) use GoogleNews vectors
     (2) build directly from wikipedia dump using corpus methods
     (3) manually build
-"""
+    """
 
 
     def __init__(self, filePath="/home/mcapizzi/Google_Drive_Arizona/Programming/word2Vec/GoogleNews-vectors-negative300.bin.gz"):
@@ -89,9 +89,24 @@ class Embedding:
 
     #save model to disk
     def saveModel(self, fname):
-        self.embeddingModel.save(fname)
+        self.embeddingModel.save_word2vec_format(fname)
 
 
+    #TODO test using sampleModelC.txt
+    #TODO test using sampleModelC.txt.gz
     #load model from file
     def loadModel(self, fname):
-        self.embeddingModel.load(fname)
+        self.embeddingModel.load_word2vec_format(fname)
+
+####
+#access vector
+####
+
+    #TODO test
+    #gets vector for a given word
+        #if not in dictionary returns none
+    def getVector(self, word):
+        if word in self.embeddingModel:
+            return self.embeddingModel[word]
+        else:
+            return None
