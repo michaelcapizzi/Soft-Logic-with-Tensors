@@ -4,7 +4,7 @@ import itertools
 #class for a model
 #TODO allow for uncertainty in calculations (i.e., not 1,0 and 0,1 for truth)
 
-class Model:
+class LogicModel:
 
         #listOfElements = ["john", "chris", "tom"]
         #dictionaryOfUnaryPredicates = {"is_mathematician": ["john", "chris"]}

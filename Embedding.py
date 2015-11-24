@@ -36,7 +36,7 @@ class Embedding:
         self.corpus = corpora.WikiCorpus(fname)
 
     #train directly from wikipedia corpus
-    def trainFromCorpus(self, window, min_count, workers, negative, size=100):
+    def trainFromCorpus(self, window, min_count, workers, negative, size=200):
         self.embeddingModel = models.word2vec.Word2Vec(sentences=self.trainingSentences, size=size, window=window, min_count=min_count, workers=workers, negative=negative)
         inputText = self.corpus.get_texts()
         #TODO add preprocessing (lowercase, lemmatize?)
@@ -53,14 +53,14 @@ class Embedding:
 
 
     #build a model with pre-loaded sentences
-    def buildModel(self, window, min_count, workers, negative, size=100):
+    def buildModel(self, window, min_count, workers, negative, size=200):
         self.embeddingModel = models.word2vec.Word2Vec(sentences=self.trainingSentences, size=size, window=window, min_count=min_count, workers=workers, negative=negative)
         #when all training is complete - saves memory
         self.embeddingModel.init_sims(replace=True)
 
 
     #train line by line in stream
-    def trainLineByLine(self, stream, window, min_count, workers, negative, size=100):
+    def trainLineByLine(self, stream, window, min_count, workers, negative, size=200):
         #intialize model
         self.embeddingModel = models.word2vec.Word2Vec(sentences=None, size=size, window=window, min_count=min_count, workers=workers, negative=negative)
 
