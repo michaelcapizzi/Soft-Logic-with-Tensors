@@ -9,7 +9,7 @@ from nltk.parse import stanford
 
 class Dependencies:
     """
-    Generates the predicate tuples from dependencies for a given Data class.
+    Generates the predicate tuples from dependencies for the sentences from a given Data class.
         Can use
             (1) practnlp (SENNA) dependency parser or
             (2) Stanford dependency parser
@@ -29,7 +29,6 @@ class Dependencies:
         self.sentences.append(moreSentences)
 
 
-    #TODO test
     #get raw stanford dependencies for self.sentences in batch
     def getStanfordDeps(self):
         parses = [self.stanfordParser.raw_parse(sent)[0].pprint() for sent in self.sentences]
@@ -37,7 +36,7 @@ class Dependencies:
         self.stanfordRawDependencies.append(rawDependencies)
 
 
-    #TODO test
+    #TODO figure out why dep_parse values of dict are empty
     #get raw SENNA dependencies for self.sentences in batch
     def getSennaDeps(self):
         output = self.sennaAnnotator.getBatchAnnotations(self.sentences, dep_parse=True)
@@ -48,11 +47,11 @@ class Dependencies:
     #TODO build
     #cleans dependencies into tuples for use
         #type = "Stanford" or "SENNA"
-    def cleanDependencies(self, depType):
-        if depType == "SENNA":
-            for sentence in self.sennaRawDependencies:
-                #
-        else:
-            for sentence in self.stanfordRawDependencies:
-                #
+    # def cleanDependencies(self, depType):
+    #     if depType == "SENNA":
+    #         for sentence in self.sennaRawDependencies:
+    #             #
+    #     else:
+    #         for sentence in self.stanfordRawDependencies:
+    #             #
 
