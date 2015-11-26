@@ -1,14 +1,16 @@
 __author__ = 'mcapizzi'
 
 import nltk
+import itertools
 
 f = open("sentenceSample.txt")
 z = f.readlines()
 f.close()
 
-sentences = []
+rawSentences = []
 for line in z:
     sents = nltk.sent_tokenize(line)
-    [sentences.append(s) for s in sents]
+    [rawSentences.append(s) for s in sents]
+sentences = list(itertools.ifilterfalse(lambda x: x == "\n", rawSentences))
 
 

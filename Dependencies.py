@@ -19,7 +19,7 @@ class Dependencies:
         self.sentences = sentences
         self.sennaAnnotator = practnlptools.tools.Annotator()
         self.stanfordParser = stanford.StanfordParser("/home/mcapizzi/Github/Semantics/stanford-parser-full-2014-08-27/stanford-parser.jar", "/home/mcapizzi/Github/Semantics/stanford-parser-full-2014-08-27/stanford-parser-3.4.1-models.jar")
-        self.stanfordAnnotator = StanfordDependencies.get_instance(jar_filename="/home/mcapizzi/Github/Semantics/stanford-parser-full-2014-08-27/stanford-parser.jar", backend="subprocess")
+        self.stanfordAnnotator = StanfordDependencies.get_instance(jar_filename="/home/mcapizzi/Github/Semantics/stanford-parser-full-2014-08-27/stanford-parser.jar", backend="subprocess")    #backend="jpype" will allow lemmatize  TODO figure out error ( 'edu.stanford.nlp.trees.TreeGraphNode' object has no attribute 'copyCount')
         self.sennaRawDependencies = []
         self.stanfordRawDependencies = []
 
@@ -32,7 +32,7 @@ class Dependencies:
     #get raw stanford dependencies for self.sentences in batch
     def getStanfordDeps(self):
         parses = [self.stanfordParser.raw_parse(sent)[0].pprint() for sent in self.sentences]
-        rawDependencies = self.stanfordAnnotator.convert_trees(parses, include_punct=False, representation="collapsed")
+        rawDependencies = self.stanfordAnnotator.convert_trees(parses, include_punct=False)
         self.stanfordRawDependencies.append(rawDependencies)
 
 
@@ -42,7 +42,6 @@ class Dependencies:
         output = self.sennaAnnotator.getBatchAnnotations(self.sentences, dep_parse=True)
         rawDependencies = [output[i]["dep_parse"].split("\n") for i in range(len(output))]
         self.sennaRawDependencies.append(rawDependencies)
-
 
     #TODO build
     #cleans dependencies into tuples for use
@@ -55,3 +54,28 @@ class Dependencies:
     #         for sentence in self.stanfordRawDependencies:
     #             #
 
+##########################################################
+##########################################################
+
+#cleans a raw Stanford dependency
+    #token[0] = token index (at 1)
+    #token[1] = token
+    #token[2] = lemma
+    #token[3] = course POStag
+    #token[4] = fine-grained POStag
+    #token[5] = dependency relation
+    #token[6] = head
+    #token[7] = dependency relation to head
+
+def cleanStanfordDep(rawDep):
+    cleanDep = []
+    for token in rawDep[0]:
+        word = token[1]
+        relation = token[5]
+        if token[token[6]] == 0:
+            head = "blah"           #TODO what to do if token is head of sentence?
+        else:
+            head = token[token[6] - 1]
+        cleanDep.append((word, relation, head))
+
+#cleans a raw SENNA dependency

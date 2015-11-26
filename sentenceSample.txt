@@ -1,2 +1,4 @@
 Besides equations, there are inequalities ("less than" and "greater than"). A special type of equation is called the function. This is often used in making graphs.
 Algebra can be used to solve real problems because the rules of algebra work in real life and numbers can be used to represent the values of real things. Physics, engineering and computer programming are areas that use algebra all the time. It is also useful to know in surveying, construction and business, especially accounting.
+
+Australia is a country in the Southern hemisphere between the Pacific Ocean and the Indian Ocean. Its official name is the Commonwealth of Australia. Australia is the sixth biggest country in the world by landmass, and is part of the Oceanic and Australasian regions. The Australian emblem is a flower called the Golden Wattle.
