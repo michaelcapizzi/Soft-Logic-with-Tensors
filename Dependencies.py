@@ -22,6 +22,7 @@ class Dependencies:
         self.stanfordAnnotator = StanfordDependencies.get_instance(jar_filename="/home/mcapizzi/Github/Semantics/stanford-parser-full-2014-08-27/stanford-parser.jar", backend="subprocess")    #backend="jpype" will allow lemmatize  TODO figure out error ( 'edu.stanford.nlp.trees.TreeGraphNode' object has no attribute 'copyCount')
         self.sennaRawDependencies = []
         self.stanfordRawDependencies = []
+        self.stanfordCleanDependencies = []
 
 
     #adds more sentences (from a later Data class)
@@ -43,21 +44,22 @@ class Dependencies:
         rawDependencies = [output[i]["dep_parse"].split("\n") for i in range(len(output))]
         self.sennaRawDependencies.append(rawDependencies)
 
-    #TODO build
+
     #cleans dependencies into tuples for use
         #type = "Stanford" or "SENNA"
-    # def cleanDependencies(self, depType):
-    #     if depType == "SENNA":
-    #         for sentence in self.sennaRawDependencies:
-    #             #
-    #     else:
-    #         for sentence in self.stanfordRawDependencies:
-    #             #
+    def cleanDependencies(self, depType):
+        if depType == "SENNA":
+            for sentence in self.sennaRawDependencies:
+                #TODO complete
+                print ("none")
+        else:
+            for sentence in self.stanfordRawDependencies[0]:
+                self.stanfordCleanDependencies.append(cleanStanfordDep(sentence))
 
 ##########################################################
 ##########################################################
 
-#cleans a raw Stanford dependency
+    #cleans a raw Stanford dependency
     #token[0] = token index (at 1)
     #token[1] = token
     #token[2] = lemma
@@ -68,14 +70,18 @@ class Dependencies:
     #token[7] = dependency relation to head
 
 def cleanStanfordDep(rawDep):
+    #intitialize list
     cleanDep = []
-    for token in rawDep[0]:
+    #renumbers to remove gaps in indexing
+    rawDep.renumber()
+    for token in rawDep:
         word = token[1]
-        relation = token[5]
-        if token[token[6]] == 0:
-            head = "blah"           #TODO what to do if token is head of sentence?
+        relation = token[7]
+        if token[6] == 0:
+            head = None           #TODO what to do if token is head of sentence?
         else:
-            head = token[token[6] - 1]
+            head = rawDep[token[6] - 1][1]
         cleanDep.append((word, relation, head))
+    return cleanDep
 
 #cleans a raw SENNA dependency
