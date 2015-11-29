@@ -127,6 +127,7 @@ def cleanSENNADep(rawDep):
     return cleanDep
 
 
+#TODO enhance --> currently only takes first predicate in sentence
 #extracts appropriate predicates from sentence in a list
     #or returns None
 def extractPredicate(cleanDep):
@@ -144,10 +145,25 @@ def extractPredicate(cleanDep):
     predicates = {}
     predicateCounter = 0
     for tuple in cleanDep:
+        #active sentence
         if tuple[1] == "nsubj":
             predicateCounter += 1
-            predicates[predicateCounter] = (tuple[0], tuple[2])     #put into dict
+            predicates[predicateCounter] = (tuple[0], tuple[2], None)     #put into dict
+        elif tuple[1] == "dobj":
+            predicates[predicateCounter] = (predicates[predicateCounter][0], predicates[predicateCounter][1], tuple[0])
+            break
+        # #passive sentence
+        # elif tuple[1] == "nsubjpass":
+        #     predicateCounter += 1
+        #     predicates[predicateCounter] = (None, tuple[2], tuple[3])
+        # elif tuple[1] == "agent":
+        #     predicates[predicateCounter] = (tuple[0], predicates[predicateCounter][1], predicates[predicateCounter][2])
+        #     break
+        #copular
         elif tuple[1] == "cop":
-            predicates[predicateCounter] = (predicates[predicateCounter][0], "is_" + predicates[predicateCounter][2])                                               #update second item in tuple for copular
+            predicates[predicateCounter] = (predicates[predicateCounter][0], "is_" + predicates[predicateCounter][1], None)                                               #update second item in tuple for copular
+            break
+
+    return predicates
 
 

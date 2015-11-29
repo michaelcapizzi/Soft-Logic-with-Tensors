@@ -3,6 +3,7 @@ import itertools
 
 #class for a model
 #TODO allow for uncertainty in calculations (i.e., not 1,0 and 0,1 for truth)
+#TODO update with outer product (see Grefenstette)
 
 class LogicModel:
 
