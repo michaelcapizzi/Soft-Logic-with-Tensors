@@ -40,8 +40,6 @@ allPreds = []
 ################
 #attempt to multiprocess TODO - figure out how to use
 
-pool = multiprocessing.Pool(processes=4)
-
 #method for the whole process
 def wholeProcess(fileName):
     #open file
@@ -64,6 +62,8 @@ def wholeProcess(fileName):
 
     # return depClass.extractedPredicates
     [allPreds.append(pred) for pred in depClass.extractedPredicates]
+
+pool = multiprocessing.Pool(processes=4)
 
 #set up processes - one for each file
 [pool.apply(wholeProcess, args=open("simpleWikipedia/" + z)) for z in os.listdir("simpleWikipedia")]
