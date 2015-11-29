@@ -28,7 +28,7 @@ class Data:
     #removes \n and html lines and titles and converts to ASCII
     def makeASCII(self):
         docRegex = r'[<>]'
-        titleRegex = r'^\w+/.?$'
+        titleRegex = r'^\w+/.?$'        #TODO doesn't seem to be capturing this (but it's OK, because it'll get filtered by Dependencies
         unicodeRegex = r'\\u.*'
         self.allSentences = filter(  lambda x:   x != "" and
                                                 not re.search(docRegex, x, re.U) and
