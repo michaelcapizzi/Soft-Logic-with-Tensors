@@ -144,25 +144,30 @@ def extractPredicate(cleanDep):
     #initialize variables
     predicates = {}
     predicateCounter = 0
-    for tuple in cleanDep:
+    for j in range(len(cleanDep)):
         #active sentence
-        if tuple[1] == "nsubj":
+        if cleanDep[j][1] == "nsubj":
             predicateCounter += 1
-            predicates[predicateCounter] = (tuple[0], tuple[2], None)     #put into dict
-        elif tuple[1] == "dobj":
-            predicates[predicateCounter] = (predicates[predicateCounter][0], predicates[predicateCounter][1], tuple[0])
-            break
-        # #passive sentence
-        # elif tuple[1] == "nsubjpass":
-        #     predicateCounter += 1
-        #     predicates[predicateCounter] = (None, tuple[2], tuple[3])
-        # elif tuple[1] == "agent":
-        #     predicates[predicateCounter] = (tuple[0], predicates[predicateCounter][1], predicates[predicateCounter][2])
-        #     break
-        #copular
-        elif tuple[1] == "cop":
-            predicates[predicateCounter] = (predicates[predicateCounter][0], "is_" + predicates[predicateCounter][1], None)                                               #update second item in tuple for copular
-            break
+            predicates[predicateCounter] = (cleanDep[j][0], cleanDep[j][2], None)
+            for k in range(j, len(cleanDep)):
+                #with object
+                if cleanDep[k][1] == "dobj":
+                    predicates[predicateCounter] = (predicates[predicateCounter][0], predicates[predicateCounter][1], cleanDep[k][0])
+                    break
+                #copular
+                elif cleanDep[k][1] == "cop":
+                    predicates[predicateCounter] = (predicates[predicateCounter][0], "is_" + predicates[predicateCounter][1], None)
+                    break
+        #passive sentence
+        elif cleanDep[j][1] == "nsubjpass":
+            predicateCounter += 1
+            predicates[predicateCounter] = (None, cleanDep[j][2], cleanDep[j][0])
+            for k in range(j, len(cleanDep)):
+                if cleanDep[k][1] == "agent":
+                    predicates[predicateCounter] = (cleanDep[k][0], predicates[predicateCounter][1], predicates[predicateCounter][2])
+                    break
+            if not predicates[predicateCounter][0]:
+                predicates[predicateCounter] = None
 
     return predicates
 
