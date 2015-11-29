@@ -165,6 +165,14 @@ def extractPredicate(cleanDep):
             if not predicates[predicateCounter][0]:
                 predicates[predicateCounter] = None
 
-    return predicates
+    # return predicates
+    predicatesToReturn = []
+    for pred in predicates.keys():
+        if predicates[pred]:
+            predicatesToReturn.append(predicates[pred])
 
+    if predicatesToReturn:
+        return predicatesToReturn
+    else:
+        return None
 

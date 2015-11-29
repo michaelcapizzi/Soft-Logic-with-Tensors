@@ -7,7 +7,8 @@ import nltk as nl
 
 class Data:
 
-    """Takes a plain text file and sentence tokenizes, cleaning the input to ASCII.  allSentences   can then be fed to annotator for dependency parsing
+    """
+    Takes a plain text file and sentence tokenizes, cleaning the input to ASCII.  allSentences can then be fed to annotator for dependency parsing
     """
 
     def __init__(self, file):
