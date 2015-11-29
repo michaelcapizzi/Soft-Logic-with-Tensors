@@ -10,7 +10,7 @@ import multiprocessing
 #main method to get all predicates from wikipedia articles
 
 #initialize variable for all predicates
-allPreds = []
+# allPreds = []
 
 #iterate through wiki files
 # for file in os.listdir("simpleWikipedia"):
@@ -64,7 +64,7 @@ def wholeProcess(fileName):
     output.put(depClass.extractedPredicates)
 
 #set up processes - one for each file
-processes = [multiprocessing.Process(target=wholeProcess, args=(open("simpleWikipedia/" + z),allPreds)) for z in os.listdir("simpleWikipedia")]
+processes = [multiprocessing.Process(target=wholeProcess, args=open("simpleWikipedia/" + z)) for z in os.listdir("simpleWikipedia")]
 
 #run processes
 for p in processes:
