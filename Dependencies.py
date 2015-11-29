@@ -48,7 +48,7 @@ class Dependencies:
 
     #cleans dependencies into tuples for use
         #type = "Stanford" or "SENNA"
-    def cleanDependencies(self, depType):
+    def cleanDeps(self, depType):
         if depType == "SENNA":
             for sentence in self.sennaRawDependencies:
                 self.sennaCleanDependencies.append(cleanSENNADep(sentence))
@@ -58,17 +58,17 @@ class Dependencies:
 
 
     #extracts predicates for use in semantic model
-    # def extractPredicates(self, depType):
-    #     if depType == "SENNA":
-    #         for sentence in self.sennaCleanDependencies:
-    #             if extractPredicate(sentence):                  #if a sentence has predicates to extract
-    #                 predicates = extractPredicate(sentence)
-    #                 [self.extractedPredicates.append(predicates[j]) for j in range(len(predicates))]        #add each to self.predicates
-    #     else:
-    #         for sentence in self.stanfordCleanDependencies:
-    #             if extractPredicate(sentence):                  #if a sentence has predicates to extract
-    #                 predicates = extractPredicate(sentence)
-    #                 [self.extractedPredicates.append(predicates[j]) for j in range(len(predicates))]        #add each to self.predicates
+    def extractPredicates(self, depType):
+        if depType == "SENNA":
+            for sentence in self.sennaCleanDependencies:
+                if extractPredicate(sentence):                  #if a sentence has predicates to extract
+                    predicates = extractPredicate(sentence)
+                    [self.extractedPredicates.append(predicates[j]) for j in range(len(predicates))]        #add each to self.predicates
+        else:
+            for sentence in self.stanfordCleanDependencies:
+                if extractPredicate(sentence):                  #if a sentence has predicates to extract
+                    predicates = extractPredicate(sentence)
+                    [self.extractedPredicates.append(predicates[j]) for j in range(len(predicates))]        #add each to self.predicates
 ##########################################################
 ##########################################################
 
