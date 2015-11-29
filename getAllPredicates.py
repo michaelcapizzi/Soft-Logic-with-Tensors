@@ -66,7 +66,7 @@ def wholeProcess(fileName):
 pool = multiprocessing.Pool(processes=4)
 
 #set up processes - one for each file
-[pool.apply(wholeProcess, args=(z,)) for z in os.listdir("simpleWikipedia")]
+[pool.apply_async(wholeProcess, args=(z,)) for z in os.listdir("simpleWikipedia")]
 
 
 ############################################
