@@ -24,6 +24,7 @@ class Dependencies:
         self.sennaCleanDependencies = []
         self.stanfordRawDependencies = []
         self.stanfordCleanDependencies = []
+        self.extractedPredicates = []
 
 
     #adds more sentences (from a later Data class)
@@ -55,6 +56,19 @@ class Dependencies:
             for sentence in self.stanfordRawDependencies:
                 self.stanfordCleanDependencies.append(cleanStanfordDep(sentence))
 
+
+    #extracts predicates for use in semantic model
+    def extractPredicates(self, depType):
+        if depType == "SENNA":
+            for sentence in self.sennaCleanDependencies:
+                if extractPredicate(sentence):                  #if a sentence has predicates to extract
+                    predicates = extractPredicate(sentence)
+                    [self.extractedPredicates.append(predicates[j]) for j in range(len(predicates))]        #add each to self.predicates
+        else:
+            for sentence in self.stanfordCleanDependencies:
+                if extractPredicate(sentence):                  #if a sentence has predicates to extract
+                    predicates = extractPredicate(sentence)
+                    [self.extractedPredicates.append(predicates[j]) for j in range(len(predicates))]        #add each to self.predicates
 ##########################################################
 ##########################################################
 
@@ -112,5 +126,9 @@ def cleanSENNADep(rawDep):
         cleanDep.append((word, relation, head))
     return cleanDep
 
+
+#extracts appropriate predicates from sentence in a list
+    #or returns None
+def extractPredicate(sentence):
 
 
