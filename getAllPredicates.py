@@ -12,39 +12,12 @@ import multiprocessing
 #initialize variable for all predicates
 allPreds = []
 
-#iterate through wiki files
-for file in os.listdir("simpleWikipedia"):
-    print ("handling file " + file)
-    #open file
-    f = open("simpleWikipedia/" + file)
-    #make Data class
-    dataClass = data.Data(f)
-    #tokenize
-    dataClass.sentenceTokenize()
-    #clean
-    dataClass.makeASCII()
-    #make dependencies class
-    depClass = dep.Dependencies(dataClass.allSentences)
-    #get raw Senna deps
-    depClass.getSennaDeps()
-    #clean Senna deps
-    depClass.cleanDeps("SENNA")
-    #extract predicates
-    depClass.extractPredicates("SENNA")
-    #add to allPreds
-    [allPreds.append(p) for p in depClass.extractedPredicates]
-    f.close()
-
-# ################
-# #attempt to multiprocess TODO - figure out how to use
 #
-# output = multiprocessing.Queue()
-#
-# #method for the whole process
-# def wholeProcess(fileName):
+# #iterate through wiki files
+# for file in os.listdir("simpleWikipedia"):
+#     print ("handling file " + file)
 #     #open file
-#     print ("working on file: " + fileName)
-#     f = open("simpleWikipedia/" + fileName)
+#     f = open("simpleWikipedia/" + file)
 #     #make Data class
 #     dataClass = data.Data(f)
 #     #tokenize
@@ -59,24 +32,44 @@ for file in os.listdir("simpleWikipedia"):
 #     depClass.cleanDeps("SENNA")
 #     #extract predicates
 #     depClass.extractPredicates("SENNA")
-#
-#     # return depClass.extractedPredicates
-#     output.put(depClass.extractedPredicates)
-#
-# #set up processes - one for each file
-# processes = [multiprocessing.Process(target=wholeProcess, args=open("simpleWikipedia/" + z)) for z in os.listdir("simpleWikipedia")]
-#
-# #run processes
-# for p in processes:
-#     p.start()
-#
-# #exit processes
-# for p in processes:
-#     p.join()
-#
-# allPreds = [output.get() for p in processes]
-#
-# ############################################
+#     #add to allPreds
+#     [allPreds.append(p) for p in depClass.extractedPredicates]
+#     f.close()
+
+
+################
+#attempt to multiprocess TODO - figure out how to use
+
+pool = multiprocessing.Pool(processes=4)
+
+#method for the whole process
+def wholeProcess(fileName):
+    #open file
+    print ("working on file: " + fileName)
+    f = open("simpleWikipedia/" + fileName)
+    #make Data class
+    dataClass = data.Data(f)
+    #tokenize
+    dataClass.sentenceTokenize()
+    #clean
+    dataClass.makeASCII()
+    #make dependencies class
+    depClass = dep.Dependencies(dataClass.allSentences)
+    #get raw Senna deps
+    depClass.getSennaDeps()
+    #clean Senna deps
+    depClass.cleanDeps("SENNA")
+    #extract predicates
+    depClass.extractPredicates("SENNA")
+
+    # return depClass.extractedPredicates
+    [allPreds.append(pred) for pred in depClass.extractedPredicates]
+
+#set up processes - one for each file
+[pool.apply(wholeProcess, args=open("simpleWikipedia/" + z)) for z in os.listdir("simpleWikipedia")]
+
+
+############################################
 
 #pickle
 f = open("Predicates/extracted-" + time.strftime("%m_%d") + ".pickle", "wb")
