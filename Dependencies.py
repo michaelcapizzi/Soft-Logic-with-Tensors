@@ -114,7 +114,7 @@ def cleanSENNADep(rawDep):
     #initialize list
     cleanDep = []
     #reformat each tuple
-    regex = r'(\w+)\((\w+\.?)-\d+, (\w+\.?)-\d+\)'     #\.? because some SENNA dependenices attach the period
+    regex = r'(\w+)\((\w+)\.?-\d+, (\w+)\.?-\d+\)'     #\.? because some SENNA dependenices attach the period
     for token in rawDep:
         capture = re.search(regex, token)
         word = capture.group(3)
@@ -127,7 +127,6 @@ def cleanSENNADep(rawDep):
     return cleanDep
 
 
-#TODO enhance --> currently only takes first predicate in sentence
 #extracts appropriate predicates from sentence in a list
     #or returns None
 def extractPredicate(cleanDep):
