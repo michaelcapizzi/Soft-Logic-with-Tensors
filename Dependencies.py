@@ -3,8 +3,8 @@ import practnlptools
 __author__ = 'mcapizzi'
 
 from practnlptools import tools
-import StanfordDependencies
-from nltk.parse import stanford
+# import StanfordDependencies
+# from nltk.parse import stanford
 import re
 
 class Dependencies:
@@ -18,8 +18,8 @@ class Dependencies:
     def __init__(self, sentences):
         self.sentences = removeParen(sentences)
         self.sennaAnnotator = practnlptools.tools.Annotator()
-        self.stanfordParser = stanford.StanfordParser("/home/mcapizzi/Github/Semantics/stanford-parser-full-2014-08-27/stanford-parser.jar", "/home/mcapizzi/Github/Semantics/stanford-parser-full-2014-08-27/stanford-parser-3.4.1-models.jar")
-        self.stanfordAnnotator = StanfordDependencies.get_instance(jar_filename="/home/mcapizzi/Github/Semantics/stanford-parser-full-2014-08-27/stanford-parser.jar", backend="subprocess")    #backend="jpype" will allow lemmatize  TODO figure out error ( 'edu.stanford.nlp.trees.TreeGraphNode' object has no attribute 'copyCount')
+        # self.stanfordParser = stanford.StanfordParser("/home/mcapizzi/Github/Semantics/stanford-parser-full-2014-08-27/stanford-parser.jar", "/home/mcapizzi/Github/Semantics/stanford-parser-full-2014-08-27/stanford-parser-3.4.1-models.jar")
+        # self.stanfordAnnotator = StanfordDependencies.get_instance(jar_filename="/home/mcapizzi/Github/Semantics/stanford-parser-full-2014-08-27/stanford-parser.jar", backend="subprocess")    #backend="jpype" will allow lemmatize  TODO figure out error ( 'edu.stanford.nlp.trees.TreeGraphNode' object has no attribute 'copyCount')
         self.sennaRawDependencies = []
         self.sennaCleanDependencies = []
         self.stanfordRawDependencies = []
@@ -32,11 +32,11 @@ class Dependencies:
         self.sentences.append(moreSentences)
 
 
-    #get raw stanford dependencies for self.sentences in batch
-    def getStanfordDeps(self):
-        parses = [self.stanfordParser.raw_parse(sent)[0].pprint() for sent in self.sentences]
-        rawDependencies = self.stanfordAnnotator.convert_trees(parses, include_punct=False, representation="collapsed")
-        self.stanfordRawDependencies = rawDependencies
+    # #get raw stanford dependencies for self.sentences in batch
+    # def getStanfordDeps(self):
+    #     parses = [self.stanfordParser.raw_parse(sent)[0].pprint() for sent in self.sentences]
+    #     rawDependencies = self.stanfordAnnotator.convert_trees(parses, include_punct=False, representation="collapsed")
+    #     self.stanfordRawDependencies = rawDependencies
 
 
     #get raw SENNA dependencies for self.sentences in batch
