@@ -18,10 +18,8 @@ class Dependencies:
     def __init__(self, sentences):
         self.sentences = removeParen(sentences)
         self.sennaAnnotator = practnlptools.tools.Annotator()
-        # self.stanfordParser = stanford.StanfordParser("/home/mcapizzi/Github/Semantics/stanford-parser-full-2014-08-27/stanford-parser.jar", "/home/mcapizzi/Github/Semantics/stanford-parser-full-2014-08-27/stanford-parser-3.4.1-models.jar")
-        self.stanfordParser = stanford.StanfordParser("stanford-parser-full-2014-08-27/stanford-parser.jar", "stanford-parser-full-2014-08-27/stanford-parser-3.4.1-models.jar")
-        # self.stanfordAnnotator = StanfordDependencies.get_instance(jar_filename="/home/mcapizzi/Github/Semantics/stanford-parser-full-2014-08-27/stanford-parser.jar", backend="subprocess")    #backend="jpype" will allow lemmatize  TODO figure out error ( 'edu.stanford.nlp.trees.TreeGraphNode' object has no attribute 'copyCount')
-        self.stanfordAnnotator = StanfordDependencies.get_instance(jar_filename="stanford-parser-full-2014-08-27/stanford-parser.jar", backend="subprocess")    #backend="jpype" will allow lemmatize  TODO figure out error ( 'edu.stanford.nlp.trees.TreeGraphNode' object has no attribute 'copyCount')
+        self.stanfordParser = stanford.StanfordParser("/home/mcapizzi/Github/Semantics/stanford-parser-full-2014-08-27/stanford-parser.jar", "/home/mcapizzi/Github/Semantics/stanford-parser-full-2014-08-27/stanford-parser-3.4.1-models.jar")
+        self.stanfordAnnotator = StanfordDependencies.get_instance(jar_filename="/home/mcapizzi/Github/Semantics/stanford-parser-full-2014-08-27/stanford-parser.jar", backend="subprocess")    #backend="jpype" will allow lemmatize  TODO figure out error ( 'edu.stanford.nlp.trees.TreeGraphNode' object has no attribute 'copyCount')
         self.sennaRawDependencies = []
         self.sennaCleanDependencies = []
         self.stanfordRawDependencies = []
