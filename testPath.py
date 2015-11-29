@@ -5,5 +5,5 @@ import os
 
 for file in os.listdir("simpleWikipedia"):
 
-    print "file"
+    print file
 
