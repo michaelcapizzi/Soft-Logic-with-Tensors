@@ -131,24 +131,16 @@ def cleanSENNADep(rawDep):
 #extracts appropriate predicates from sentence in a list
     #or returns None
 def extractPredicate(cleanDep):
-    #iterate through each dependency tuple
-        #keep if
-            #nsubj
-            #root
-            #dobj       (nsubj, root, dobj)
-                #OR
-            #cop        (nsubj, is_country)
-                #OR
-            #nsubjpass
-            #TODO figure out what form would be
     #initialize variables
     predicates = {}
     predicateCounter = 0
+    #iterate through each tuple
     for j in range(len(cleanDep)):
         #active sentence
-        if cleanDep[j][1] == "nsubj":
+        if cleanDep[j][1] == "nsubj" or cleanDep[j][1] == "xsubj":
             predicateCounter += 1
             predicates[predicateCounter] = (cleanDep[j][0], cleanDep[j][2], None)
+            #look for object or copular
             for k in range(j, len(cleanDep)):
                 #with object
                 if cleanDep[k][1] == "dobj":
@@ -158,14 +150,19 @@ def extractPredicate(cleanDep):
                 elif cleanDep[k][1] == "cop":
                     predicates[predicateCounter] = (predicates[predicateCounter][0], "is_" + predicates[predicateCounter][1], None)
                     break
+            #ensure at least a subject and predicate
+            if not predicates[predicateCounter][0] or not predicates[predicateCounter][1]:
+                    predicates[predicateCounter] = None
         #passive sentence
         elif cleanDep[j][1] == "nsubjpass":
             predicateCounter += 1
             predicates[predicateCounter] = (None, cleanDep[j][2], cleanDep[j][0])
+            #look for an agent
             for k in range(j, len(cleanDep)):
                 if cleanDep[k][1] == "agent":
                     predicates[predicateCounter] = (cleanDep[k][0], predicates[predicateCounter][1], predicates[predicateCounter][2])
                     break
+            #ensure an agent
             if not predicates[predicateCounter][0]:
                 predicates[predicateCounter] = None
 
