@@ -67,7 +67,7 @@ def wholeProcess(fileName):
 #set up for processes
 pool = multiprocessing.Pool(processes=4)
 
-results = [pool.apply_async(wholeProcess, args=(z,)) for z in os.listdir("simpleWikipedia")]
+results = [pool.apply(wholeProcess, args=(z,)) for z in os.listdir("simpleWikipedia")]
 
 #populate allPreds with results
 [allPreds.append(pred) for pred in results]
