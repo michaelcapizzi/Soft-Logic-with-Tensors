@@ -75,13 +75,12 @@ class Dependencies:
 #removes any sentence with ( or )
     #since it can't be handled by SENNA and to guarantee Stanford has same length of sentences
 def removeParen(listOfSentences):
-    sentences = listOfSentences[:]
+    sentences = []
     for j in range(len(listOfSentences)):
-        print listOfSentences[j]
-        if "(" in sentences[j] or ")" in sentences[j]:
-            del sentences[j]
+        if "(" not in listOfSentences[j] and ")" not in listOfSentences[j]:
+            sentences.append(listOfSentences[j])
 
-    return sentences
+    return [sentences[j].rstrip() for j in range(len(sentences))]
 
 
 # cleans a raw Stanford dependency
