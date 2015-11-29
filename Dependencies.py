@@ -58,17 +58,17 @@ class Dependencies:
 
 
     #extracts predicates for use in semantic model
-    def extractPredicates(self, depType):
-        if depType == "SENNA":
-            for sentence in self.sennaCleanDependencies:
-                if extractPredicate(sentence):                  #if a sentence has predicates to extract
-                    predicates = extractPredicate(sentence)
-                    [self.extractedPredicates.append(predicates[j]) for j in range(len(predicates))]        #add each to self.predicates
-        else:
-            for sentence in self.stanfordCleanDependencies:
-                if extractPredicate(sentence):                  #if a sentence has predicates to extract
-                    predicates = extractPredicate(sentence)
-                    [self.extractedPredicates.append(predicates[j]) for j in range(len(predicates))]        #add each to self.predicates
+    # def extractPredicates(self, depType):
+    #     if depType == "SENNA":
+    #         for sentence in self.sennaCleanDependencies:
+    #             if extractPredicate(sentence):                  #if a sentence has predicates to extract
+    #                 predicates = extractPredicate(sentence)
+    #                 [self.extractedPredicates.append(predicates[j]) for j in range(len(predicates))]        #add each to self.predicates
+    #     else:
+    #         for sentence in self.stanfordCleanDependencies:
+    #             if extractPredicate(sentence):                  #if a sentence has predicates to extract
+    #                 predicates = extractPredicate(sentence)
+    #                 [self.extractedPredicates.append(predicates[j]) for j in range(len(predicates))]        #add each to self.predicates
 ##########################################################
 ##########################################################
 
@@ -76,7 +76,8 @@ class Dependencies:
     #since it can't be handled by SENNA and to guarantee Stanford has same length of sentences
 def removeParen(listOfSentences):
     sentences = listOfSentences[:]
-    for j in range(len(sentences)):
+    for j in range(len(listOfSentences)):
+        print listOfSentences[j]
         if "(" in sentences[j] or ")" in sentences[j]:
             del sentences[j]
 
@@ -129,6 +130,25 @@ def cleanSENNADep(rawDep):
 
 #extracts appropriate predicates from sentence in a list
     #or returns None
-def extractPredicate(sentence):
+def extractPredicate(cleanDep):
+    #iterate through each dependency tuple
+        #keep if
+            #nsubj
+            #root
+            #dobj       (nsubj, root, dobj)
+                #OR
+            #cop        (nsubj, is_country)
+                #OR
+            #nsubjpass
+            #TODO figure out what form would be
+    #initialize variables
+    predicates = {}
+    predicateCounter = 0
+    for tuple in cleanDep:
+        if tuple[1] == "nsubj":
+            predicateCounter += 1
+            predicates[predicateCounter] = (tuple[0], tuple[2])     #put into dict
+        elif tuple[1] == "cop":
+            predicates[predicateCounter] = (predicates[predicateCounter][0], "is_" + predicates[predicateCounter][2])                                               #update second item in tuple for copular
 
 
