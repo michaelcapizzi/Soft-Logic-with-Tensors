@@ -61,13 +61,16 @@ def wholeProcess(fileName):
     depClass.extractPredicates("SENNA")
 
     # return depClass.extractedPredicates
-    [allPreds.append(pred) for pred in depClass.extractedPredicates]
+    # [allPreds.append(pred) for pred in depClass.extractedPredicates]
+    return depClass.extractedPredicates
 
+#set up for processes
 pool = multiprocessing.Pool(processes=4)
 
-#set up processes - one for each file
-[pool.apply_async(wholeProcess, args=(z,)) for z in os.listdir("simpleWikipedia")]
+results = [pool.apply_async(wholeProcess, args=(z,)) for z in os.listdir("simpleWikipedia")]
 
+#populate allPreds with results
+[allPreds.append(pred) for pred in results]
 
 ############################################
 
