@@ -13,6 +13,7 @@ allPreds = []
 
 #iterate through wiki files
 for file in os.listdir("simpleWikipedia"):
+    print ("handling file " + file)
     #open file
     f = open("simpleWikipedia/" + file)
     #make Data class
