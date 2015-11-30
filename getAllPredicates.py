@@ -38,7 +38,7 @@ allPreds = []
 
 
 ################
-#attempt to multiprocess TODO - figure out how to use
+#attempt to multiprocess TODO - confirm that this worked correctly
 
 q = multiprocessing.Queue()
 
