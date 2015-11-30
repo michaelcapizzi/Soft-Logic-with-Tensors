@@ -1,7 +1,6 @@
 __author__ = 'mcapizzi'
 
 import tensorflow as tf
-import math
 
 class NeuralNet:
     """
@@ -136,6 +135,10 @@ class NeuralNet:
             #display logs per epoch step
             if epoch % self.displayStep == 0:
                 print("Epoch:", "%04d" % (epoch + 1),"cost=", "{:9f}".format(avgCost))
+
+
+    def closeSession(self):
+        self.session.close()
 
 
     #run prediction
