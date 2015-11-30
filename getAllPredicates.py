@@ -40,6 +40,8 @@ allPreds = []
 ################
 #attempt to multiprocess TODO - figure out how to use
 
+q = multiprocessing.Queue()
+
 #method for the whole process
 def wholeProcess(fileName):
     #open file
@@ -62,15 +64,20 @@ def wholeProcess(fileName):
 
     # return depClass.extractedPredicates
     # [allPreds.append(pred) for pred in depClass.extractedPredicates]
-    return depClass.extractedPredicates
+    q.put(depClass.extractedPredicates)
 
-#set up for processes
-pool = multiprocessing.Pool(processes=4)
 
-results = [pool.apply(wholeProcess, args=(z,)) for z in os.listdir("simpleWikipedia")]
+#initialize processes
+ps = [multiprocessing.Process(target=wholeProcess, args=(z,)) for z in os.listdir("simpleWikipedia")]
 
-#populate allPreds with results
-[allPreds.append(pred) for pred in results]
+#start
+[p.start() for p in ps]
+
+#stop
+[p.join() for p in ps]
+
+#add to allPreds
+[[allPreds.append(pred) for pred in q.get()] for p in ps]
 
 ############################################
 
