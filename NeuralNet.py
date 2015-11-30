@@ -37,7 +37,7 @@ class NeuralNet:
 
 
     #create feed-forward model
-    def feedForward(self, inputX, secondBias, secondActivation):
+    def feedForward(self, inputX, secondBias):
         #z1
         z1 =    (
                     tf.add  (
@@ -80,17 +80,7 @@ class NeuralNet:
                     )
 
         #a2
-        if secondActivation:
-            if self.activationFunction == "sigmoid":
-                a2 = tf.nn.sigmoid(z2, name="Output")
-            elif self.activationFunction == "tanh":
-                a2 = tf.nn.tanh(z2, name="Output")
-            elif self.activationFunction == "relu":
-                a2 = tf.nn.relu(z2, name="Output")
-            else:
-                a2 = tf.nn.tanh(z2, name="Output")
-        else:
-            a2 = z2
+        a2 = tf.nn.softmax(z2, "SoftmaxOutput")
 
         #output
         return a2
