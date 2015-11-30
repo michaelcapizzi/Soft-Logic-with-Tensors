@@ -88,8 +88,9 @@ class NeuralNet:
 
     #cost
         #output = feedforward
-    def calculateCost(self, output):
-        return tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(output, self.y))
+    def calculateCost(self, output, labels):
+        # return tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(output, self.y))
+        return -tf.reduce_sum(output * tf.log(labels))
 
 
     #optimizer
@@ -116,16 +117,15 @@ class NeuralNet:
         self.session.run(self.init)
         #training cycle
         for epoch in range(self.trainingEpochs):
-            avgCost = 0
+        #     avgCost = 0
             batch = int(trainingData/self.batchSize)
-            #iterate over each batch
+            # iterate over each batch
             for i in range(batch):
                 self.session.run(optimizer, feed_dict={self.x: trainingData[0], self.y: trainingData[1]})
-                avgCost += self.session.run(cost, feed_dict={self.x: trainingData[0], self.y: trainingData[1]}) / batch
-            #display logs per epoch step
-            if epoch % self.displayStep == 0:
-                print("Epoch:", "%04d" % (epoch + 1),"cost=", "{:9f}".format(avgCost))
-
+        #         avgCost += self.session.run(cost, feed_dict={self.x: trainingData[0], self.y: trainingData[1]}) / batch
+        #     #display logs per epoch step
+        #     if epoch % self.displayStep == 0:
+        #         print("Epoch:", "%04d" % (epoch + 1),"cost=", "{:9f}".format(avgCost))
 
     def closeSession(self):
         self.session.close()
