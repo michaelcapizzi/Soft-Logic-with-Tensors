@@ -45,10 +45,9 @@ class Dependencies:
 
     #get raw SENNA dependencies for self.sentences in batch
     def getSennaDeps(self, batch):
-        # output = self.sennaAnnotator.getBatchAnnotations(self.sentences, dep_parse=True)
         output = self.sennaAnnotator.getBatchAnnotations(batch, dep_parse=True)
         rawDependencies = [output[i]["dep_parse"].split("\n") for i in range(len(output))]
-        #add to list
+        #add to class variable
         self.sennaRawDependencies = rawDependencies
         #also return list
         return rawDependencies
@@ -60,35 +59,46 @@ class Dependencies:
         batchOutput = []
         if depType == "SENNA":
             for sentence in batch:
-                # for sentence in self.sennaRawDependencies:
                 clean = cleanSENNADep(sentence)
+                #add to class variable
                 self.sennaCleanDependencies.append(clean)
+                #also add to output
                 batchOutput.append(clean)
         else:
-            for sentence in self.stanfordRawDependencies:
+            for sentence in batch:
                 clean = cleanStanfordDep(sentence)
+                #add to class variable
                 self.stanfordCleanDependencies.append(clean)
+                #also add to output
                 batchOutput.append(clean)
         return batchOutput
 
 
     #extracts predicates for use in semantic model
     def extractPredicates(self, depType, batch):
+        batchOutput = []
         if depType == "SENNA":
-            for sentence in self.sennaCleanDependencies:
+            for sentence in batch:
                 if extractPredicate(sentence):                  #if a sentence has predicates to extract
                     predicates = extractPredicate(sentence)
+                    #add to class variable
                     [self.extractedPredicates.append(predicates[j]) for j in range(len(predicates))]        #add each to self.predicates
+                    #also add to output
+                    [batchOutput.append(predicates[j]) for j in range(len(predicates))]        #add each to batch output
         else:
-            for sentence in self.stanfordCleanDependencies:
+            for sentence in batch:
                 if extractPredicate(sentence):                  #if a sentence has predicates to extract
                     predicates = extractPredicate(sentence)
+                    #add to class variable
                     [self.extractedPredicates.append(predicates[j]) for j in range(len(predicates))]        #add each to self.predicates
-                ##########################################################
-                ##########################################################
+                    #also add to output
+                    [batchOutput.append(predicates[j]) for j in range(len(predicates))]        #add each to self.predicates
 
-                #removes any sentence with ( or )
-                #since it can't be handled by SENNA and to guarantee Stanford has same length of sentences
+##########################################################
+##########################################################
+
+#removes any sentence with ( or )
+#since it can't be handled by SENNA and to guarantee Stanford has same length of sentences
 def removeParen(listOfSentences):
     sentences = []
     for j in range(len(listOfSentences)):
