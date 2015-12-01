@@ -15,6 +15,8 @@ class Dependencies:
             (2) Stanford dependency parser
     """
 
+    #TODO segment for easier use of big files
+
     def __init__(self, sentences):
         self.sentences = removeParen(sentences)
         self.sennaAnnotator = practnlptools.tools.Annotator()
@@ -45,7 +47,10 @@ class Dependencies:
     def getSennaDeps(self):
         output = self.sennaAnnotator.getBatchAnnotations(self.sentences, dep_parse=True)
         rawDependencies = [output[i]["dep_parse"].split("\n") for i in range(len(output))]
+        #add to list
         self.sennaRawDependencies = rawDependencies
+        #also return list
+        return rawDependencies
 
 
     #cleans dependencies into tuples for use
