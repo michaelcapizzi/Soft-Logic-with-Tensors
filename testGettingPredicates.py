@@ -12,7 +12,7 @@ import multiprocessing
 allPreds = []
 
 #open file
-f = open("wikiSample.txt")
+f = open("Testing/wikiSample.txt")
 #make Data class
 dataClass = data.Data(f)
 #tokenize
