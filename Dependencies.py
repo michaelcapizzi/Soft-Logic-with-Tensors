@@ -93,6 +93,7 @@ class Dependencies:
                     [self.extractedPredicates.append(predicates[j]) for j in range(len(predicates))]        #add each to self.predicates
                     #also add to output
                     [batchOutput.append(predicates[j]) for j in range(len(predicates))]        #add each to self.predicates
+        return batchOutput
 
 ##########################################################
 ##########################################################

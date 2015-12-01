@@ -24,14 +24,16 @@ depClass = dep.Dependencies(dataClass.allSentences)
 
 ###############################################################
 #get raw Senna deps
-depClass.getSennaDeps()
+deps = depClass.getSennaDeps(dataClass.allSentences[0:10])
 ###############################################################
 #clean Senna deps
-depClass.cleanDeps("SENNA")
+cleanDeps = depClass.cleanDeps("SENNA", deps)
 #extract predicates
-depClass.extractPredicates("SENNA")
+preds = depClass.extractPredicates("SENNA", cleanDeps)
 #add to allPreds
-[allPreds.append(p) for p in depClass.extractedPredicates]
+# [allPreds.append(p) for p in depClass.extractedPredicates]
+[allPreds.append(p) for p in preds]
+
 f.close()
 
 
