@@ -44,8 +44,9 @@ class Dependencies:
 
 
     #get raw SENNA dependencies for self.sentences in batch
-    def getSennaDeps(self):
-        output = self.sennaAnnotator.getBatchAnnotations(self.sentences, dep_parse=True)
+    def getSennaDeps(self, batch):
+        # output = self.sennaAnnotator.getBatchAnnotations(self.sentences, dep_parse=True)
+        output = self.sennaAnnotator.getBatchAnnotations(batch, dep_parse=True)
         rawDependencies = [output[i]["dep_parse"].split("\n") for i in range(len(output))]
         #add to list
         self.sennaRawDependencies = rawDependencies
@@ -53,19 +54,26 @@ class Dependencies:
         return rawDependencies
 
 
-    #cleans dependencies into tuples for use
+        #cleans dependencies into tuples for use
         #type = "Stanford" or "SENNA"
-    def cleanDeps(self, depType):
+    def cleanDeps(self, depType, batch):
+        batchOutput = []
         if depType == "SENNA":
-            for sentence in self.sennaRawDependencies:
-                self.sennaCleanDependencies.append(cleanSENNADep(sentence))
+            for sentence in batch:
+                # for sentence in self.sennaRawDependencies:
+                clean = cleanSENNADep(sentence)
+                self.sennaCleanDependencies.append(clean)
+                batchOutput.append(clean)
         else:
             for sentence in self.stanfordRawDependencies:
-                self.stanfordCleanDependencies.append(cleanStanfordDep(sentence))
+                clean = cleanStanfordDep(sentence)
+                self.stanfordCleanDependencies.append(clean)
+                batchOutput.append(clean)
+        return batchOutput
 
 
     #extracts predicates for use in semantic model
-    def extractPredicates(self, depType):
+    def extractPredicates(self, depType, batch):
         if depType == "SENNA":
             for sentence in self.sennaCleanDependencies:
                 if extractPredicate(sentence):                  #if a sentence has predicates to extract
@@ -76,11 +84,11 @@ class Dependencies:
                 if extractPredicate(sentence):                  #if a sentence has predicates to extract
                     predicates = extractPredicate(sentence)
                     [self.extractedPredicates.append(predicates[j]) for j in range(len(predicates))]        #add each to self.predicates
-##########################################################
-##########################################################
+                ##########################################################
+                ##########################################################
 
-#removes any sentence with ( or )
-    #since it can't be handled by SENNA and to guarantee Stanford has same length of sentences
+                #removes any sentence with ( or )
+                #since it can't be handled by SENNA and to guarantee Stanford has same length of sentences
 def removeParen(listOfSentences):
     sentences = []
     for j in range(len(listOfSentences)):
@@ -91,14 +99,14 @@ def removeParen(listOfSentences):
 
 
 # cleans a raw Stanford dependency
-    # token[0] = token index (at 1)
-    # token[1] = token
-    # token[2] = lemma
-    # token[3] = course POStag
-    # token[4] = fine-grained POStag
-    # token[5] = dependency relation
-    # token[6] = head
-    # token[7] = dependency relation to head
+# token[0] = token index (at 1)
+# token[1] = token
+# token[2] = lemma
+# token[3] = course POStag
+# token[4] = fine-grained POStag
+# token[5] = dependency relation
+# token[6] = head
+# token[7] = dependency relation to head
 def cleanStanfordDep(rawDep):
     #intitialize list
     cleanDep = []
@@ -135,7 +143,7 @@ def cleanSENNADep(rawDep):
 
 
 #extracts appropriate predicates from sentence in a list
-    #or returns None
+#or returns None
 def extractPredicate(cleanDep):
     #initialize variables
     predicates = {}
@@ -158,7 +166,7 @@ def extractPredicate(cleanDep):
                     break
             #ensure at least a subject and predicate
             if not predicates[predicateCounter][0] or not predicates[predicateCounter][1]:
-                    predicates[predicateCounter] = None
+                predicates[predicateCounter] = None
         #passive sentence
         elif cleanDep[j][1] == "nsubjpass":
             predicateCounter += 1
