@@ -8,10 +8,11 @@ import pickle
 #initialize accumulative list
 allPreds = []
 
-for file in os.listdir("Predicates/"):
+for file in os.listdir("Predicates/attempt02/"):
     if file.endswith("pickle"):
         #open file
-        f = open("Predicates/" + file)
+        print file
+        f = open("Predicates/attempt02/" + file, "rb")
         #create object
         ps = pickle.load(f)
         #close file
