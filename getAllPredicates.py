@@ -68,9 +68,9 @@ for file in [os.listdir("simpleWikipedia")[0]]:       #TODO if works, remove [0]
     # [[allPreds.append(pred) for pred in q.get()] for p in ps]
     pool = multiprocessing.Pool(processes=4)
     results = [pool.apply_async(multiProcess, args=(depClass.sentences[z],)) for z in range(len(depClass.sentences))]
-    print results
+    retrievedResults = [p.get() for p in results]
     #add to allPreds
-    [allPreds.append(pred) for pred in results]
+    [allPreds.append(pred) for pred in retrievedResults]
 
 print allPreds
 #pickle
