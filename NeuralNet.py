@@ -5,7 +5,7 @@ import pickle
 import numpy as np
 import math
 
-#TODO update this class to match examples from tensorflow-Examples
+#TODO add autoencoder option
 
 class NeuralNet:
     """
@@ -20,7 +20,7 @@ class NeuralNet:
         :param displayStep = ???
         :param hiddenNodes ==> number of nodes in a single hidden layer
     """
-    def __init__(self, embeddingClass, vectorSize, learningRate, trainingEpochs, batchSize, displayStep, hiddenNodes, activationFunction):
+    def __init__(self, embeddingClass, vectorSize, learningRate, trainingEpochs, batchSize, displayStep, hiddenNodes, outputNodes, activationFunction):
         self.embeddingClass = embeddingClass
         self.vectorSize = vectorSize
         self.predicates = None      #TODO should this be []?
@@ -30,18 +30,13 @@ class NeuralNet:
         self.batchSize = batchSize,
         self.displayStep = displayStep,
         self.inputDimensions = 3 * vectorSize,
+        self.outputDimensions = outputNodes
         self.hiddenNodes = hiddenNodes,
         self.activationFunction = activationFunction
         self.input = tf.placeholder("float", name="Input", shape=[None, self.inputDimensions]),
-        self.label = tf.placeholder("float", name="LabelDistribution", shape=[None, 2])         #a distribution over T/F
-        self.weights =  {   #W initialized with standard randomized values
-                            "W1": tf.Variable(tf.random_normal([3 * vectorSize, hiddenNodes], mean=0, stddev=math.sqrt(float(6) / float(6 * vectorSize))), name="W1"),
-                            "W2": tf.Variable(tf.random_normal([hiddenNodes, 2], mean=0, stddev=math.sqrt(float(6) / float(6 * vectorSize))), name="W2")
-                        }
-        self.biases =   {   #b initialized with standard randomized values
-                            "b1": tf.Variable(tf.random_normal([1, hiddenNodes], mean=0, stddev=math.sqrt(float(6) / float(6 * vectorSize))), name="b1"),
-                            "b2": tf.Variable(tf.random_normal([1, 2], mean=0, stddev=math.sqrt(float(6) / float(6 * vectorSize))), name="b2")
-                        }
+        self.label = tf.placeholder("float", name="LabelDistribution", shape=[None, outputNodes])         #a distribution over T/F
+        self.weights =  {}
+        self.biases =   {}   #b initialized with standard randomized values
         self.session = tf.Session()
         self.init = tf.initialize_all_variables()
 
@@ -109,6 +104,22 @@ class NeuralNet:
 
 
 ##############################################################################
+    #TODO confirm this is done correctly
+    #initialize weights
+    def initializeParameters(self, useAutoEncoder=False, existingW1=None, existingW2=None):
+        if useAutoEncoder:
+            #load weights from existing variable
+            self.weights["W1"] = existingW1
+            self.weights["W2"] = existingW2
+        else:
+            self.weights["W1"] = tf.Variable(tf.random_normal([self.inputDimensions, self.hiddenNodes], mean=0, stddev=math.sqrt(float(6) / float(self.inputDimensions + self.outputDimensions + 1))), name="W1")
+            self.weights["W2"] = tf.Variable(tf.random_normal([self.hiddenNodes, self.outputDimensions], mean=0, stddev=math.sqrt(float(6) / float(self.inputDimensions + self.outputDimensions + 1))), name="W2")
+
+        self.biases["b1"] = tf.Variable(tf.random_normal([1, self.hiddenNodes], mean=0, stddev=math.sqrt(float(6) / float(self.inputDimensions + self.outputDimensions + 1))), name="b1")
+        self.biases["b2"] = tf.Variable(tf.random_normal([1, self.outputDimensions], mean=0, stddev=math.sqrt(float(6) / float(self.inputDimensions + self.outputDimensions + 1))), name="b2")
+
+
+##########
 
     #create feed-forward model
     def feedForward(self, inputX, secondBias):
@@ -199,16 +210,23 @@ class NeuralNet:
     #run training
         #data = (vector, label)
         #optimizer = trainOp
-    def runTraining(self, trainingData, gradientOp, costOp):
+    def runTraining(self, trainingData, gradientOp, costOp, isAutoEncoder=False):
         self.session.run(self.init)
         #initial average cost
         avgCost = 0
 
         #training cycle
         for epoch in range(self.trainingEpochs):
-            self.session.run(gradientOp, feed_dict={self.input: trainingData[0], self.label: trainingData[1]})
+            #run gradient step
+            if isAutoEncoder:
+                self.session.run(gradientOp, feed_dict={self.input: trainingData[0], self.label: trainingData[0]})
+            else:
+                self.session.run(gradientOp, feed_dict={self.input: trainingData[0], self.label: trainingData[1]})
             #compute average cost
-            newCost = self.session.run(costOp, feed_dict={self.input: trainingData[0], self.label: trainingData[1]})
+            if isAutoEncoder:
+                newCost = self.session.run(costOp, feed_dict={self.input: trainingData[0], self.label: trainingData[0]})
+            else:
+                newCost = self.session.run(costOp, feed_dict={self.input: trainingData[0], self.label: trainingData[1]})
             #calculate diff from previous iteration
             diff = avgCost - newCost
             avgCost = newCost
