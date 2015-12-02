@@ -36,7 +36,7 @@ for file in os.listdir("simpleWikipedia"):
         clean = depClass.cleanDeps("SENNA", raw)
         preds = depClass.extractPredicates("SENNA", clean)
         [allPreds.append(p) for p in preds]
-        print("pickling batch %s of preds" %str(batch+1))
+        print("pickling batch %s of file %s" %(str(batch+1), file))
         pickle.dump(preds, pf)
     print "pickled file %s" %file
     pf.close()
