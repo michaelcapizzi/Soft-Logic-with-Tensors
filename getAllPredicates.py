@@ -54,19 +54,22 @@ for file in [os.listdir("simpleWikipedia")[0]]:       #TODO if works, remove [0]
         q.put(extractedPreds)
 
     print "initializing processes"
-    #set up Processes
-    ps = [multiprocessing.Process(target=multiProcess, args=(depClass.sentences[z],)) for z in range(len(depClass.sentences))]
-
-    print "start"
-    #start
-    [p.start() for p in ps]
-
-    #stop
-    [p.join() for p in ps]
-
+    # #set up Processes
+    # ps = [multiprocessing.Process(target=multiProcess, args=(depClass.sentences[z],)) for z in range(len(depClass.sentences))]
+    #
+    # print "start"
+    # #start
+    # [p.start() for p in ps]
+    #
+    # #stop
+    # [p.join() for p in ps]
+    #
+    # #add to allPreds
+    # [[allPreds.append(pred) for pred in q.get()] for p in ps]
+    pool = multiprocessing.Pool(processes=4)
+    results = [pool.apply_async(multiProcess, args=(z,)) for z in range(len(depClass.sentences))]
     #add to allPreds
-    [[allPreds.append(pred) for pred in q.get()] for p in ps]
-
+    [allPreds.append(pred) for pred in results]
 
 #pickle
 f = open("Predicates/extracted-" + time.strftime("%m_%d") + ".pickle", "wb")
