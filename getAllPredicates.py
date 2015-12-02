@@ -41,7 +41,7 @@ for file in toAnalyze:
     depClass = dep.Dependencies(dataClass.allSentences)
 
     for batch in range(len(depClass.sentences)):
-        pf = open("Predicates/attempt02/" + file + ".pickle", "wb")
+        pf = open("Predicates/attempt02/" + file + "-" + str(batch+1) + ".pickle", "wb")
         raw = depClass.getSennaDeps(depClass.sentences[batch])
         clean = depClass.cleanDeps("SENNA", raw)
         preds = depClass.extractPredicates("SENNA", clean)
