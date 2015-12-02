@@ -148,19 +148,20 @@ def cleanSENNADep(rawDep):
     regex = r'(\w+)\((\w+)\.?-\d+, (\w+)\.?-\d+\)'     #\.? because some SENNA dependenices attach the period
     for token in rawDep:
         capture = re.search(regex, token)
-        if capture.group(3):
-            word = capture.group(3)
-        else:
-            word = None
-        if capture.group(1):
-            relation = capture.group(1)
-        else:
-            relation = None
-        if capture.group(2) == "ROOT":
-            head = None             #TODO what to do if token is head of sentence?
-        else:
-            head = capture.group(2)
-        cleanDep.append((word, relation, head))
+        if capture:
+            if capture.group(3):
+                word = capture.group(3)
+            else:
+                word = None
+            if capture.group(1):
+                relation = capture.group(1)
+            else:
+                relation = None
+            if capture.group(2) == "ROOT":
+                head = None             #TODO what to do if token is head of sentence?
+            else:
+                head = capture.group(2)
+            cleanDep.append((word, relation, head))
     return cleanDep
 
 
