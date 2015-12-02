@@ -14,7 +14,7 @@ allPreds = []
 
 
 finished = ["wiki_05", "wiki_08", "wiki_03", "wiki_07", "wiki_02", "wiki_06", "wiki_01", "wiki_10"]
-stuck = ["wiki_00", "wiki_09"]
+stuck = ["wiki_00", "wiki_09", "wiki_04"]
 skip = finished + stuck
 allFiles = os.listdir("simpleWikipedia")
 toAnalyze = itertools.ifilterfalse(lambda x: x in skip, allFiles)
@@ -23,7 +23,7 @@ toAnalyze = itertools.ifilterfalse(lambda x: x in skip, allFiles)
 # for file in os.listdir("simpleWikipedia"):
 for file in toAnalyze:
     print ("handling file " + file)
-    pf = open("Predicates/" + file + ".pickle", "wb")
+    pf = open("Predicates/attempt02/" + file + ".pickle", "wb")
     #open file
     f = open("simpleWikipedia/" + file)
     #make Data class
