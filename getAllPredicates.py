@@ -21,13 +21,17 @@ for file in [os.listdir("simpleWikipedia")[0]]:       #TODO if works, remove [0]
     #make Data class
     dataClass = data.Data(f)
     #tokenize
+    print "tokenizing"
     dataClass.sentenceTokenize()
     #clean
+    print "cleaning"
     dataClass.makeASCII()
     #make dependencies class
         #with chunkSize of 50
+    print "building dependency class"
     depClass = dep.Dependencies(dataClass.allSentences, 1500)
 
+    print "setting up queue"
     #set up queue
     q = multiprocessing.Queue()
 
@@ -49,9 +53,11 @@ for file in [os.listdir("simpleWikipedia")[0]]:       #TODO if works, remove [0]
         #put in queue
         q.put(extractedPreds)
 
+    print "initializing processes"
     #set up Processes
     ps = [multiprocessing.Process(target=multiProcess, args=(depClass.sentences[z],)) for z in range(len(depClass.sentences))]
 
+    print "start"
     #start
     [p.start() for p in ps]
 
