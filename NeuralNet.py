@@ -1,6 +1,10 @@
 __author__ = 'mcapizzi'
 
 import tensorflow as tf
+import pickle
+import numpy as np
+
+#TODO update this class to match examples from tensorflow-Examples
 
 class NeuralNet:
     """
@@ -13,7 +17,10 @@ class NeuralNet:
         :param displayStep = ???
         :param hiddenNodes ==> number of nodes in single hidden layer
     """
-    def __init__(self, learningRate, trainingEpochs, batchSize, displayStep, inputDimensions, hiddenNodes, activationFunction):
+    def __init__(self, embeddingClass, learningRate, trainingEpochs, batchSize, displayStep, inputDimensions, hiddenNodes, activationFunction):
+        self.embeddingClass = embeddingClass
+        self.predicates = None      #TODO should this be []?
+        self.vectors = []
         self.learningRate = learningRate,
         self.trainingEpochs = trainingEpochs,
         self.batchSize = batchSize,
@@ -34,7 +41,50 @@ class NeuralNet:
         self.session = tf.Session()
         self.init = None
 
+##############################################################################
 
+    #pickle thing
+    def pickle(self, thing, fname):
+        f = open(fname + ".pickle", "wb")
+        pickle.dump(thing, f)
+        f.close()
+
+
+    #unpickle thing
+    def unpickle(self, fname):
+        f = open(fname + ".pickle", "rb")
+        thing = pickle.load(fname)
+        f.close()
+        #return thing
+        return thing
+
+
+    #TODO should I add lowercase as a backoff?
+    #generate vectors for predicates
+    def getVectors(self, dimensions):
+        for predicate in self.predicates:
+            if predicate[0]:
+                subjectWord = self.embeddingClass.getVector(predicate[0])
+            else:
+                subjectWord = None
+            if predicate[1]:
+                verbWord = self.embeddingClass.getVector(predicate[1])
+            else:
+                verbWord = None
+            if predicate[2]:
+                objectWord = self.embeddingClass.getVector(predicate[2])
+            else:
+                objectWord = np.zeros(dimensions)
+            if subjectWord and verbWord:
+                v = np.concatenate((subjectWord, verbWord, objectWord))
+                self.vectors.append(v)
+
+
+    #load embeddings
+    def loadEmbeddings(self, fname):
+        self.embeddingClass.loadModel(fname)
+
+##############################################################################
 
     #create feed-forward model
     def feedForward(self, inputX, secondBias):
