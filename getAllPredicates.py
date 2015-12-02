@@ -68,6 +68,7 @@ for file in [os.listdir("simpleWikipedia")[0]]:       #TODO if works, remove [0]
     # [[allPreds.append(pred) for pred in q.get()] for p in ps]
     pool = multiprocessing.Pool(processes=4)
     results = [pool.apply_async(multiProcess, args=(z,)) for z in range(len(depClass.sentences))]
+    print results
     #add to allPreds
     [allPreds.append(pred) for pred in results]
 
