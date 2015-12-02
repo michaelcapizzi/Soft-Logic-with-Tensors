@@ -49,7 +49,7 @@ for file in toAnalyze:
         print("pickling batch %s of file %s" %(str(batch+1), file))
         pickle.dump(preds, pf)
         pf.close()
-        print "pickled batch %s of file %s" %(batch + 1, file)
+        print "pickled batch %s of file %s" %(str(batch + 1), file)
 
 #if it gets through everthing without an error
 f2 = open("Predicates/ALL-" + time.strftime("%m_%d") + ".pickle", "wb")
