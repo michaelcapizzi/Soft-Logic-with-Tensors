@@ -12,10 +12,10 @@ import multiprocessing
 #initialize variable for all predicates
 allPreds = []
 
-
 #iterate through wiki files
 for file in os.listdir("simpleWikipedia"):
     print ("handling file " + file)
+    pf = open("Predicates/" + file + ".pickle", "wb")
     #open file
     f = open("simpleWikipedia/" + file)
     #make Data class
@@ -29,23 +29,20 @@ for file in os.listdir("simpleWikipedia"):
     #make dependencies class
         #with chunkSize of 50
     print "building dependency class"
-    depClass = dep.Dependencies(dataClass.allSentences, 200)
+    depClass = dep.Dependencies(dataClass.allSentences)
 
     for batch in range(len(depClass.sentences)):
         raw = depClass.getSennaDeps(depClass.sentences[batch])
-        print raw
         clean = depClass.cleanDeps("SENNA", raw)
-        print clean
         preds = depClass.extractPredicates("SENNA", clean)
         [allPreds.append(p) for p in preds]
 
-    print "finished with file %s" %file
+        pickle.dump(preds, pf)
+    print "pickled file %s" %file
+    pf.close()
 
-
-#pickle
-f = open("Predicates/extracted-" + time.strftime("%m_%d") + ".pickle", "wb")
-
-pickle.dump(allPreds, f)
-
-f.close()
+#if it gets through everthing without an error
+f2 = open("Predicates/ALL-" + time.strftime("%m_%d") + ".pickle", "wb")
+pickle.dump(allPreds, f2)
+f2.close()
 
