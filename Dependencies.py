@@ -48,7 +48,7 @@ class Dependencies:
         output = self.sennaAnnotator.getBatchAnnotations(batch, dep_parse=True)
         rawDependencies = [output[i]["dep_parse"].split("\n") for i in range(len(output))]
         #add to class variable
-        self.sennaRawDependencies = rawDependencies
+        # self.sennaRawDependencies = rawDependencies
         #also return list
         return rawDependencies
 
@@ -61,14 +61,14 @@ class Dependencies:
             for sentence in batch:
                 clean = cleanSENNADep(sentence)
                 #add to class variable
-                self.sennaCleanDependencies.append(clean)
+                # self.sennaCleanDependencies.append(clean)
                 #also add to output
                 batchOutput.append(clean)
         else:
             for sentence in batch:
                 clean = cleanStanfordDep(sentence)
                 #add to class variable
-                self.stanfordCleanDependencies.append(clean)
+                # self.stanfordCleanDependencies.append(clean)
                 #also add to output
                 batchOutput.append(clean)
         return batchOutput
@@ -82,7 +82,7 @@ class Dependencies:
                 if extractPredicate(sentence):                  #if a sentence has predicates to extract
                     predicates = extractPredicate(sentence)
                     #add to class variable
-                    [self.extractedPredicates.append(predicates[j]) for j in range(len(predicates))]        #add each to self.predicates
+                    # [self.extractedPredicates.append(predicates[j]) for j in range(len(predicates))]        #add each to self.predicates
                     #also add to output
                     [batchOutput.append(predicates[j]) for j in range(len(predicates))]        #add each to batch output
         else:
@@ -90,7 +90,7 @@ class Dependencies:
                 if extractPredicate(sentence):                  #if a sentence has predicates to extract
                     predicates = extractPredicate(sentence)
                     #add to class variable
-                    [self.extractedPredicates.append(predicates[j]) for j in range(len(predicates))]        #add each to self.predicates
+                    # [self.extractedPredicates.append(predicates[j]) for j in range(len(predicates))]        #add each to self.predicates
                     #also add to output
                     [batchOutput.append(predicates[j]) for j in range(len(predicates))]        #add each to self.predicates
         return batchOutput
