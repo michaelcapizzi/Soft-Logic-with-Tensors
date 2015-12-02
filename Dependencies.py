@@ -17,8 +17,8 @@ class Dependencies:
 
     #TODO segment for easier use of big files
 
-    def __init__(self, sentences):
-        self.sentences = removeParen(sentences)
+    def __init__(self, sentences, chunkSize):
+        self.sentences = chunk(removeParen(sentences), chunkSize)
         self.sennaAnnotator = practnlptools.tools.Annotator()
         # self.stanfordParser = stanford.StanfordParser("/home/mcapizzi/Github/Semantics/stanford-parser-full-2014-08-27/stanford-parser.jar", "/home/mcapizzi/Github/Semantics/stanford-parser-full-2014-08-27/stanford-parser-3.4.1-models.jar")
         # self.stanfordParser = stanford.StanfordParser("stanford-parser-full-2014-08-27/stanford-parser.jar", "stanford-parser-full-2014-08-27/stanford-parser-3.4.1-models.jar")
@@ -97,6 +97,11 @@ class Dependencies:
 
 ##########################################################
 ##########################################################
+
+#chunks sentences into more manageable sizes for large datasets
+def chunk(list, chunkSize):
+    for i in xrange(0, len(list), chunkSize):
+        yield list[i : i+chunkSize]
 
 #removes any sentence with ( or )
 #since it can't be handled by SENNA and to guarantee Stanford has same length of sentences
