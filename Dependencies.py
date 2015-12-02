@@ -15,10 +15,9 @@ class Dependencies:
             (2) Stanford dependency parser
     """
 
-    #TODO segment for easier use of big files
-
     def __init__(self, sentences):
-        self.sentences = list(chunk(removeParen(sentences), 200))
+        # self.sentences = list(chunk(removeParen(sentences), 200))       #200 = batch size for annotating
+        self.sentences = list(chunk(exciseParen(sentences), 200))
         self.sennaAnnotator = practnlptools.tools.Annotator()
         # self.stanfordParser = stanford.StanfordParser("/home/mcapizzi/Github/Semantics/stanford-parser-full-2014-08-27/stanford-parser.jar", "/home/mcapizzi/Github/Semantics/stanford-parser-full-2014-08-27/stanford-parser-3.4.1-models.jar")
         # self.stanfordParser = stanford.StanfordParser("stanford-parser-full-2014-08-27/stanford-parser.jar", "stanford-parser-full-2014-08-27/stanford-parser-3.4.1-models.jar")
@@ -103,6 +102,7 @@ def chunk(list, chunkSize):
     for i in xrange(0, len(list), chunkSize):
         yield list[i : i+chunkSize]
 
+
 #removes any sentence with ( or )
 #since it can't be handled by SENNA and to guarantee Stanford has same length of sentences
 def removeParen(listOfSentences):
@@ -113,6 +113,19 @@ def removeParen(listOfSentences):
 
     return [sentences[j].rstrip() for j in range(len(sentences))]
 
+
+#removes paren section of sentence only
+def exciseParen(listOfSentences):
+    sentences = []
+    for j in range(len(listOfSentences)):
+        if "(" not in listOfSentences[j] and ")" not in listOfSentences[j]:
+            sentences.append(listOfSentences[j])
+        else:
+            regex = r'\(.*\)'
+            cleanSent = re.sub(regex, "", listOfSentences[j])
+            sentences.append(cleanSent)
+
+    return [sentences[j].rstrip() for j in range(len(sentences))]
 
 # cleans a raw Stanford dependency
 # token[0] = token index (at 1)
