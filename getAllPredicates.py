@@ -13,8 +13,8 @@ import itertools
 allPreds = []
 
 
-finished = ["wiki_05", "wiki_08", "wiki_03", "wiki_07"]
-stuck = ["wiki_00"]
+finished = ["wiki_05", "wiki_08", "wiki_03", "wiki_07", "wiki_02", "wiki_06", "wiki_01", "wiki_10"]
+stuck = ["wiki_00", "wiki_09"]
 skip = finished + stuck
 allFiles = os.listdir("simpleWikipedia")
 toAnalyze = itertools.ifilterfalse(lambda x: x in skip, allFiles)
