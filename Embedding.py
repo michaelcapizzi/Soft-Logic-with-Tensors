@@ -12,7 +12,7 @@ class Embedding:
     (2) build directly from wikipedia dump using corpus methods
     (3) manually build
     """
-
+    #TODO build 300 dimension vectors from wiki corpus
 
     def __init__(self, filePath="/home/mcapizzi/Google_Drive_Arizona/Programming/word2Vec/GoogleNews-vectors-negative300.bin.gz"):
         self.W2Vpath = filePath

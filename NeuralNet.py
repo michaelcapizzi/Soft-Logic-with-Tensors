@@ -3,43 +3,47 @@ __author__ = 'mcapizzi'
 import tensorflow as tf
 import pickle
 import numpy as np
+import math
 
 #TODO update this class to match examples from tensorflow-Examples
 
 class NeuralNet:
     """
     builds neural network to be fed predicates
-        input ==> 600 nodes, concatenation of subj, predicate, obj
         number of classes ==> binary but with softmax layers
-        :param learningRate
-        :param trainingEpochs
-        :param batchSize
+        :param embeddingClass ==> the embedding class from which the word2vecs can be loaded
+        :param vectorSize ==> length of each individual embedding vector
+        input ==> with each concatenated vector as a ROW
+        :param learningRate ==> for gradient descent
+        :param trainingEpochs ==> for gradient descent
+        :param batchSize ==> for gradient descent
         :param displayStep = ???
-        :param hiddenNodes ==> number of nodes in single hidden layer
+        :param hiddenNodes ==> number of nodes in a single hidden layer
     """
-    def __init__(self, embeddingClass, learningRate, trainingEpochs, batchSize, displayStep, inputDimensions, hiddenNodes, activationFunction):
+    def __init__(self, embeddingClass, vectorSize, learningRate, trainingEpochs, batchSize, displayStep, hiddenNodes, activationFunction):
         self.embeddingClass = embeddingClass
+        self.vectorSize = vectorSize
         self.predicates = None      #TODO should this be []?
         self.vectors = []
         self.learningRate = learningRate,
         self.trainingEpochs = trainingEpochs,
         self.batchSize = batchSize,
         self.displayStep = displayStep,
-        self.inputDimensions = inputDimensions,
+        self.inputDimensions = 3 * vectorSize,
         self.hiddenNodes = hiddenNodes,
         self.activationFunction = activationFunction
-        self.x = tf.placeholder("float", [None, self.inputDimensions]),
-        self.y = tf.placeholder("float", [None, 2])
-        self.weights =  {
-                            "W1": tf.Variable(tf.random_normal([inputDimensions, hiddenNodes])),
-                            "W2": tf.Variable(tf.random_normal([hiddenNodes, 2]))
+        self.input = tf.placeholder("float", name="Input", shape=[None, self.inputDimensions]),
+        self.label = tf.placeholder("float", name="LabelDistribution", shape=[None, 2])         #a distribution over T/F
+        self.weights =  {   #W initialized with standard randomized values
+                            "W1": tf.Variable(tf.random_normal([3 * vectorSize, hiddenNodes], mean=0, stddev=math.sqrt(float(6) / float(6 * vectorSize))), name="W1"),
+                            "W2": tf.Variable(tf.random_normal([hiddenNodes, 2], mean=0, stddev=math.sqrt(float(6) / float(6 * vectorSize))), name="W2")
                         }
-        self.biases =   {
-                            "b1": tf.Variable(tf.random_normal([hiddenNodes])),
-                            "b2": tf.Variable(tf.random_normal([2]))
+        self.biases =   {   #b initialized with standard randomized values
+                            "b1": tf.Variable(tf.random_normal([1, hiddenNodes], mean=0, stddev=math.sqrt(float(6) / float(6 * vectorSize))), name="b1"),
+                            "b2": tf.Variable(tf.random_normal([1, 2], mean=0, stddev=math.sqrt(float(6) / float(6 * vectorSize))), name="b2")
                         }
         self.session = tf.Session()
-        self.init = None
+        self.init = tf.initialize_all_variables()
 
 ##############################################################################
 
@@ -57,6 +61,11 @@ class NeuralNet:
         f.close()
         #return thing
         return thing
+
+
+    #load embeddings
+    def loadEmbeddings(self, fname):
+        self.embeddingClass.loadModel(fname)
 
 
     #generate vectors for predicates
@@ -97,103 +106,117 @@ class NeuralNet:
                 self.vectors.append(v)
 
 
-    #load embeddings
-    def loadEmbeddings(self, fname):
-        self.embeddingClass.loadModel(fname)
+
 
 ##############################################################################
 
     #create feed-forward model
     def feedForward(self, inputX, secondBias):
         #z1
-        z1 =    (
-                    tf.add  (
-                                tf.matmul   (
-                                                inputX,
-                                                self.weights["W1"]
-                                            ),
-                                self.biases["b1"]
-                            )
-                )
+        z1 =    tf.add  (
+                            tf.matmul   (
+                                            inputX,
+                                            self.weights["W1"]
+                                        ),
+                            self.biases["b1"]
+                        ,name="Input->Hidden"
+                        )
 
         #a1
         if self.activationFunction == "sigmoid":
-            a1 = tf.nn.sigmoid(z1, name="HiddenLayer")
+            a1 = tf.nn.sigmoid(z1, name="HiddenActivation")
         elif self.activationFunction == "tanh":
-            a1 = tf.nn.tanh(z1, name="HiddenLayer")
+            a1 = tf.nn.tanh(z1, name="HiddenActivation")
         elif self.activationFunction == "relu":
-            a1 = tf.nn.relu(z1, name="HiddenLayer")
-        else:
-            a1 = tf.nn.tanh(z1, name="HiddenLayer")
+            a1 = tf.nn.relu(z1, name="HiddenActivation")
+        else:   #default is tanh
+            a1 = tf.nn.tanh(z1, name="HiddenActivation")
 
         #z2
         #with secondBias?
         if secondBias:
-            z2 =    (
-                        tf.add  (
-                                    tf.matmul   (
-                                                    a1,
-                                                    self.weights["W2"]
-                                                ),
-                                    self.biases["b2"]
-                                )
-                    )
+            z2 =    tf.add  (
+                                tf.matmul   (
+                                                a1,
+                                                self.weights["W2"]
+                                            ),
+                                self.biases["b2"]
+                            ,name="Hidden->Output")
+
         else:
-            z2 =    (
-                        tf.matmul   (
-                                        a1,
-                                        self.weights["W2"]
-                                    )
-                    )
-
-        #a2
-        a2 = tf.nn.softmax(z2, "SoftmaxOutput")
-
-        #output
-        return a2
+            z2 =    tf.matmul   (
+                                    a1,
+                                    self.weights["W2"]
+                                ,name="Hidden->Output")
 
 
+        # #a2                                       #don't do this here (handled by cost
+        # a2 = tf.nn.softmax(z2, "Softmax")
+        #
+        # #output
+        # return a2
+        return z2
+
+    #TODO must generate the op
+        #ffOp = feedforward(self.input, self.weights["W1"], self.weights["W2"], self.biases["b1"], self.biases["b2"], CHOOSE ACTIVATION)
+
+##########
     #cost
         #output = feedforward
-    def calculateCost(self, output, labels):
-        # return tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(output, self.y))
-        return -tf.reduce_sum(output * tf.log(labels))
+    def calculateCost(self, outputOp, labels):
+        crossEntropy = tf.nn.softmax_cross_entropy_with_logits(outputOp, labels, name="CrossEntropy")
+        loss = tf.reduce_mean(crossEntropy, name="Loss")
+        return loss
 
+    #TODO must generate op
+        #costOp = calculateCost(ffOp, self.labels)
 
+##########
     #optimizer
         #cost = calculateCost
-    def trainOp(self, cost):
-        return tf.train.GradientDescentOptimizer(self.learningRate).minimize(cost)
+    def train(self, costOp):
+        return tf.train.GradientDescentOptimizer(self.learningRate).minimize(costOp)
 
+    #TODO must generate op
+        #gradientOp = train(costOp)
 
+##########
     #predict
-        #output = feedforward
-    def predictOp(self, output):
-        return tf.argmax(output, 2)     #TODO confirm 2 will return both probabilities
+    def predict(self, feedforwardOp):
+        softmax = tf.nn.softmax(feedforwardOp, name="Softmax")
+        return softmax
 
+    #TODO must generate op
+        #predictOp = predict(ffOp)
 
-    #initialize
-    def initialize(self):
-        self.init = tf.initialize_all_variables()
-
-
+##########
+    #TODO include some way of training until convergence
+        # if i > 0 and diff < .000001:
+        #     break
+        # else:
+        #     #print
+        #     print "iteration %s with average cost of %s and diff of %s" %(str(i),str(avgCost), str(diff))
     #run training
         #data = (vector, label)
         #optimizer = trainOp
-    def runTraining(self, trainingData, optimizer, cost):
+    def runTraining(self, trainingData, gradientOp, costOp):
         self.session.run(self.init)
+        #initial average cost
+        avgCost = 0
+
         #training cycle
         for epoch in range(self.trainingEpochs):
-        #     avgCost = 0
-            batch = int(trainingData/self.batchSize)
-            # iterate over each batch
-            for i in range(batch):
-                self.session.run(optimizer, feed_dict={self.x: trainingData[0], self.y: trainingData[1]})
-        #         avgCost += self.session.run(cost, feed_dict={self.x: trainingData[0], self.y: trainingData[1]}) / batch
-        #     #display logs per epoch step
-        #     if epoch % self.displayStep == 0:
-        #         print("Epoch:", "%04d" % (epoch + 1),"cost=", "{:9f}".format(avgCost))
+            self.session.run(gradientOp, feed_dict={self.input: trainingData[0], self.label: trainingData[1]})
+            #compute average cost
+            newCost = self.session.run(costOp, feed_dict={self.input: trainingData[0], self.label: trainingData[1]})
+            #calculate diff from previous iteration
+            diff = avgCost - newCost
+            avgCost = newCost
+            print("iteration %s with average cost of %s and diff of %" %(str(epoch+1), str(avgCost), str(diff)))
 
+
+##########
+    #close session
     def closeSession(self):
         self.session.close()
 
