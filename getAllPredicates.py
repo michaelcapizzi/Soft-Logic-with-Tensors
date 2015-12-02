@@ -14,7 +14,7 @@ allPreds = []
 
 
 #iterate through wiki files
-for file in os.listdir("simpleWikipedia")[0]:       #TODO if works, remove [0] so that it'll run for all files
+for file in [os.listdir("simpleWikipedia")[0]]:       #TODO if works, remove [0] so that it'll run for all files
     print ("handling file " + file)
     #open file
     f = open("simpleWikipedia/" + file)
