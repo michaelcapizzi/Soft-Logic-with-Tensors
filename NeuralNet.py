@@ -59,20 +59,37 @@ class NeuralNet:
         return thing
 
 
-    #TODO should I add lowercase as a backoff?
     #generate vectors for predicates
     def getVectors(self, dimensions):
         for predicate in self.predicates:
             if predicate[0]:
-                subjectWord = self.embeddingClass.getVector(predicate[0])
+                #if the uppercase exists
+                capture = self.embeddingClass.getVector(predicate[0])
+                if capture:
+                    subjectWord = capture
+                #back off to trying lowercase
+                elif self.embeddingClass.getVector(predicate[0].lower()):
+                    subjectWord = self.embeddingClass.getVector(predicate[0].lower())
             else:
                 subjectWord = None
             if predicate[1]:
-                verbWord = self.embeddingClass.getVector(predicate[1])
+                #if the uppercase exists
+                capture = self.embeddingClass.getVector(predicate[1])
+                if capture:
+                    verbWord = capture
+                #back off to trying lowercase
+                elif self.embeddingClass.getVector(predicate[1].lower()):
+                    verbWord = self.embeddingClass.getVector(predicate[1].lower())
             else:
                 verbWord = None
             if predicate[2]:
-                objectWord = self.embeddingClass.getVector(predicate[2])
+                #if the uppercase exists
+                capture = self.embeddingClass.getVector(predicate[2])
+                if capture:
+                    objectWord = capture
+                #back off to trying lowercase
+                elif self.embeddingClass.getVector(predicate[2].lower()):
+                    objectWord = self.embeddingClass.getVector(predicate[2].lower())
             else:
                 objectWord = np.zeros(dimensions)
             if subjectWord and verbWord:
