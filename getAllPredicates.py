@@ -26,7 +26,7 @@ for file in [os.listdir("simpleWikipedia")[0]]:       #TODO if works, remove [0]
     dataClass.makeASCII()
     #make dependencies class
         #with chunkSize of 50
-    depClass = dep.Dependencies(dataClass.allSentences, 50)
+    depClass = dep.Dependencies(dataClass.allSentences, 1500)
 
     #set up queue
     q = multiprocessing.Queue()
