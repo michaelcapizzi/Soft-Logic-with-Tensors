@@ -31,9 +31,9 @@ for file in [os.listdir("simpleWikipedia")[0]]:       #TODO if works, remove [0]
     print "building dependency class"
     depClass = dep.Dependencies(dataClass.allSentences, 1500)
 
-    print "setting up queue"
+    # print "setting up queue"
     #set up queue
-    q = multiprocessing.Queue()
+    # q = multiprocessing.Queue()
 
     #define function to multiprocess
     def multiProcess(sentenceBatch):
@@ -50,8 +50,8 @@ for file in [os.listdir("simpleWikipedia")[0]]:       #TODO if works, remove [0]
             #print all predicates
         for i in range(len(extractedPreds)):
             print extractedPreds[i]
-        #put in queue
-        q.put(extractedPreds)
+
+        return extractedPreds
 
     print "initializing processes"
     # #set up Processes
@@ -67,6 +67,7 @@ for file in [os.listdir("simpleWikipedia")[0]]:       #TODO if works, remove [0]
     # #add to allPreds
     # [[allPreds.append(pred) for pred in q.get()] for p in ps]
     pool = multiprocessing.Pool(processes=4)
+    print "starting"
     results = [pool.apply_async(multiProcess, args=(depClass.sentences[z],)) for z in range(len(depClass.sentences))]
     retrievedResults = [p.get() for p in results]
     #add to allPreds
