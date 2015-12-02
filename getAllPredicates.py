@@ -5,15 +5,23 @@ import Data as data
 import Dependencies as dep
 import time
 import pickle
-import multiprocessing
+import itertools
 
 #main method to get all predicates from wikipedia articles
 
 #initialize variable for all predicates
 allPreds = []
 
+
+finished = ["wiki_05", "wiki_08", "wiki_03", "wiki_07"]
+stuck = ["wiki_00"]
+skip = finished + stuck
+allFiles = os.listdir("simpleWikipedia")
+toAnalyze = itertools.ifilterfalse(lambda x: x in skip, allFiles)
+
 #iterate through wiki files
-for file in os.listdir("simpleWikipedia"):
+# for file in os.listdir("simpleWikipedia"):
+for file in toAnalyze:
     print ("handling file " + file)
     pf = open("Predicates/" + file + ".pickle", "wb")
     #open file
