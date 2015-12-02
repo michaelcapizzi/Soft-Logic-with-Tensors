@@ -71,10 +71,11 @@ for file in [os.listdir("simpleWikipedia")[0]]:       #TODO if works, remove [0]
     #add to allPreds
     [allPreds.append(pred) for pred in results]
 
+print allPreds
 #pickle
-f = open("Predicates/extracted-" + time.strftime("%m_%d") + ".pickle", "wb")
-
-pickle.dump(allPreds, f)
-
-f.close()
+# f = open("Predicates/extracted-" + time.strftime("%m_%d") + ".pickle", "wb")
+#
+# pickle.dump(allPreds, f)
+#
+# f.close()
 
