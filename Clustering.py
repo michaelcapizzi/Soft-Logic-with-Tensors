@@ -10,6 +10,11 @@ class Clusters:
         self.vectors = inputVectors
 
 
-
-    def kMeans(self, k):
+    # #clusters word vectors by kMeans
+    # def kMeans(self, k):
+    #
+    # #clusters word vectors by Gaussian Mixture Models
+    # def GMM(self, k):
+    #
+    # #clusters word vectors by cosine similarity
 

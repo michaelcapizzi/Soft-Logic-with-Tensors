@@ -20,20 +20,20 @@ class NeuralNet:
         :param displayStep = ???
         :param hiddenNodes ==> number of nodes in a single hidden layer
     """
-    def __init__(self, embeddingClass, vectorSize, learningRate, trainingEpochs, batchSize, displayStep, hiddenNodes, outputNodes, activationFunction):
+    def __init__(self, embeddingClass, vectorSize, hiddenNodes, outputNodes, trainingEpochs, activationFunction, batchSize=None, learningRate=.001, displayStep=None):
         self.embeddingClass = embeddingClass
         self.vectorSize = vectorSize
         self.predicates = None      #TODO should this be []?
         self.vectors = []
-        self.learningRate = learningRate,
-        self.trainingEpochs = trainingEpochs,
-        self.batchSize = batchSize,
-        self.displayStep = displayStep,
-        self.inputDimensions = 3 * vectorSize,
+        self.learningRate = learningRate
+        self.trainingEpochs = trainingEpochs
+        self.batchSize = batchSize
+        self.displayStep = displayStep
+        self.inputDimensions = 3 * vectorSize
         self.outputDimensions = outputNodes
-        self.hiddenNodes = hiddenNodes,
+        self.hiddenNodes = hiddenNodes
         self.activationFunction = activationFunction
-        self.input = tf.placeholder("float", name="Input", shape=[None, self.inputDimensions]),
+        self.input = tf.placeholder("float", name="Input", shape=[None, self.inputDimensions])
         self.label = tf.placeholder("float", name="LabelDistribution", shape=[None, outputNodes])         #a distribution over T/F
         self.weights =  {}
         self.biases =   {}   #b initialized with standard randomized values
@@ -48,7 +48,7 @@ class NeuralNet:
         pickle.dump(thing, f)
         f.close()
 
-
+    #TODO remove or fix - doesn't work
     #unpickle thing
     def unpickle(self, fname):
         f = open(fname + ".pickle", "rb")
@@ -63,40 +63,98 @@ class NeuralNet:
         self.embeddingClass.loadModel(fname)
 
 
+    #generate vector for a given predicate
+    def getVector(self, predicate):
+        #deconstruct copulars
+        if "_" in predicate[1]:
+            predPortion = predicate[1][3:]
+            predicate = (predicate[0], "is", predPortion)
+
+        if predicate[0]:
+            #if the uppercase exists
+            capture = self.embeddingClass.getVector(predicate[0])
+            if capture is not None:
+                subjectWord = capture
+            #back off to trying lowercase
+            else:
+                subjectWord = self.embeddingClass.getVector(predicate[0].lower())
+            # elif self.embeddingClass.getVector(predicate[0].lower()) is not None:
+            #     subjectWord = self.embeddingClass.getVector(predicate[0].lower())
+        else:
+            subjectWord = None
+        if predicate[1]:
+            #if the uppercase exists
+            capture = self.embeddingClass.getVector(predicate[1])
+            if capture is not None:
+                verbWord = capture
+            #back off to trying lowercase
+            else:
+                verbWord = self.embeddingClass.getVector(predicate[1].lower())
+            # elif self.embeddingClass.getVector(predicate[1].lower()) is not None:
+            #     verbWord = self.embeddingClass.getVector(predicate[1].lower())
+        else:
+            verbWord = None
+        if predicate[2]:
+            #if the uppercase exists
+            capture = self.embeddingClass.getVector(predicate[2])
+            if capture is not None:
+                objectWord = capture
+            #back off to trying lowercase
+            else:
+                objectWord = self.embeddingClass.getVector(predicate[2].lower())
+            # elif self.embeddingClass.getVector(predicate[2].lower()) is not None:
+            #     objectWord = self.embeddingClass.getVector(predicate[2].lower())
+        else:
+            objectWord = np.zeros(self.vectorSize)
+        if subjectWord is not None and verbWord is not None:
+            return np.concatenate((subjectWord, verbWord, objectWord))
+
+    #TODO not working - make like method above
     #generate vectors for predicates
-    def getVectors(self, dimensions):
+    def getVectors(self):
         for predicate in self.predicates:
+            #deconstruct copulars
+            if "_" in predicate[1]:
+                predPortion = predicate[1][3:]
+                predicate = (predicate[0], "is", predPortion)
+
             if predicate[0]:
-                #if the uppercase exists
+            #if the uppercase exists
                 capture = self.embeddingClass.getVector(predicate[0])
-                if capture:
+                if capture is not None:
                     subjectWord = capture
                 #back off to trying lowercase
-                elif self.embeddingClass.getVector(predicate[0].lower()):
+                else:
                     subjectWord = self.embeddingClass.getVector(predicate[0].lower())
+                    # elif self.embeddingClass.getVector(predicate[0].lower()) is not None:
+                    #     subjectWord = self.embeddingClass.getVector(predicate[0].lower())
             else:
                 subjectWord = None
             if predicate[1]:
                 #if the uppercase exists
                 capture = self.embeddingClass.getVector(predicate[1])
-                if capture:
+                if capture is not None:
                     verbWord = capture
                 #back off to trying lowercase
-                elif self.embeddingClass.getVector(predicate[1].lower()):
+                else:
                     verbWord = self.embeddingClass.getVector(predicate[1].lower())
+                    # elif self.embeddingClass.getVector(predicate[1].lower()) is not None:
+                    #     verbWord = self.embeddingClass.getVector(predicate[1].lower())
             else:
                 verbWord = None
             if predicate[2]:
                 #if the uppercase exists
                 capture = self.embeddingClass.getVector(predicate[2])
-                if capture:
+                if capture is not None:
                     objectWord = capture
                 #back off to trying lowercase
-                elif self.embeddingClass.getVector(predicate[2].lower()):
+                else:
                     objectWord = self.embeddingClass.getVector(predicate[2].lower())
+                    # elif self.embeddingClass.getVector(predicate[2].lower()) is not None:
+                    #     objectWord = self.embeddingClass.getVector(predicate[2].lower())
             else:
-                objectWord = np.zeros(dimensions)
-            if subjectWord and verbWord:
+                objectWord = np.zeros(self.vectorSize)
+            if subjectWord is not None and verbWord is not None:
                 v = np.concatenate((subjectWord, verbWord, objectWord))
                 self.vectors.append(v)
 

@@ -97,7 +97,9 @@ class Embedding:
 ####
 #access vector
 ####
-
+    #get vector size
+    def getVectorSize(self):
+        return len(self.embeddingModel["the"])
 
     #gets vector for a given word
         #if not in dictionary returns none
