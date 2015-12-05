@@ -4,6 +4,7 @@ import tensorflow as tf
 import pickle
 import numpy as np
 import math
+import random
 
 #TODO add autoencoder option
 
@@ -299,3 +300,27 @@ class NeuralNet:
 
     #run prediction
     #use feedforward
+
+#####################################################
+
+def generateRandomPredicate(listOfSubjects, listOfVerbs, listOfObjects, allPredsList):
+    #calculate percentage of preds without object
+    noneObjsCount = float(listOfObjects.count(None)) / len(listOfObjects)
+    #start with a predicate in list of predicates
+    pred = allPredsList[0]
+    #set up while loop to run until a pred NOT IN list of predicates appears
+    while pred in allPredsList:
+        random.shuffle(listOfSubjects)
+        subjectWord = listOfSubjects[0]
+        random.shuffle(listOfVerbs)
+        verbWord = listOfVerbs[0]
+        #determine whether there should be an object (according to odds of None in object) or if verb indicates copular
+        if random.randint(0,1) > noneObjsCount and "_" not in verbWord:
+            random.shuffle(listOfObjects)
+            objectWord = listOfObjects[0]
+        else:
+            objectWord = None
+        pred = (subjectWord, verbWord, objectWord)
+
+    return pred
+
