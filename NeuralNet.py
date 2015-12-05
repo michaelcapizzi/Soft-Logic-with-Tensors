@@ -79,8 +79,6 @@ class NeuralNet:
             #back off to trying lowercase
             else:
                 subjectWord = self.embeddingClass.getVector(predicate[0].lower())
-            # elif self.embeddingClass.getVector(predicate[0].lower()) is not None:
-            #     subjectWord = self.embeddingClass.getVector(predicate[0].lower())
         else:
             subjectWord = None
         if predicate[1]:
@@ -91,8 +89,6 @@ class NeuralNet:
             #back off to trying lowercase
             else:
                 verbWord = self.embeddingClass.getVector(predicate[1].lower())
-            # elif self.embeddingClass.getVector(predicate[1].lower()) is not None:
-            #     verbWord = self.embeddingClass.getVector(predicate[1].lower())
         else:
             verbWord = None
         if predicate[2]:
@@ -103,14 +99,14 @@ class NeuralNet:
             #back off to trying lowercase
             else:
                 objectWord = self.embeddingClass.getVector(predicate[2].lower())
-            # elif self.embeddingClass.getVector(predicate[2].lower()) is not None:
-            #     objectWord = self.embeddingClass.getVector(predicate[2].lower())
+                if objectWord is None:
+                    objectWord = np.zeros(self.vectorSize)
         else:
             objectWord = np.zeros(self.vectorSize)
         if subjectWord is not None and verbWord is not None:
             return np.concatenate((subjectWord, verbWord, objectWord))
 
-    #TODO not working - make like method above
+
     #generate vectors for predicates
     def getVectors(self):
         for predicate in self.predicates:
@@ -127,8 +123,6 @@ class NeuralNet:
                 #back off to trying lowercase
                 else:
                     subjectWord = self.embeddingClass.getVector(predicate[0].lower())
-                    # elif self.embeddingClass.getVector(predicate[0].lower()) is not None:
-                    #     subjectWord = self.embeddingClass.getVector(predicate[0].lower())
             else:
                 subjectWord = None
             if predicate[1]:
@@ -139,8 +133,6 @@ class NeuralNet:
                 #back off to trying lowercase
                 else:
                     verbWord = self.embeddingClass.getVector(predicate[1].lower())
-                    # elif self.embeddingClass.getVector(predicate[1].lower()) is not None:
-                    #     verbWord = self.embeddingClass.getVector(predicate[1].lower())
             else:
                 verbWord = None
             if predicate[2]:
@@ -151,8 +143,8 @@ class NeuralNet:
                 #back off to trying lowercase
                 else:
                     objectWord = self.embeddingClass.getVector(predicate[2].lower())
-                    # elif self.embeddingClass.getVector(predicate[2].lower()) is not None:
-                    #     objectWord = self.embeddingClass.getVector(predicate[2].lower())
+                    if objectWord is None:
+                        objectWord = np.zeros(self.vectorSize)
             else:
                 objectWord = np.zeros(self.vectorSize)
             if subjectWord is not None and verbWord is not None:
