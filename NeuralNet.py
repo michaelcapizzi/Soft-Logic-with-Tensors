@@ -25,6 +25,7 @@ class NeuralNet:
         self.embeddingClass = embeddingClass
         self.vectorSize = vectorSize
         self.predicates = None
+        self.negPredicates = None
         self.vectors = []
         self.learningRate = learningRate
         self.trainingEpochs = trainingEpochs
@@ -75,11 +76,14 @@ class NeuralNet:
         #iterate as many negative examples as positive
         for i in range(numberOfPositivePreds):
             negPred = generateNegativePredicate(allSubjs, allVerbs, allObjs, self.predicates)
+            print("generating negative predicate " + str(i), negPred)
             negPredList.append(negPred)
         #add to predicate list
-        [self.predicates.append(np) for np in negPredList]
+        # [self.negPredicates.append(np) for np in negPredList]
         #shuffle list
-        random.shuffle(self.predicates)
+        # random.shuffle(self.negPredicates)
+        return negPredList
+
 
     #generate vector for a given predicate
     def getVector(self, predicate):
@@ -270,6 +274,7 @@ class NeuralNet:
 
 ##########
     #TODO include some way of training until convergence
+    #TODO rebuild training method as stochastic gradient descent
         # if i > 0 and diff < .000001:
         #     break
         # else:
