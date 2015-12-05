@@ -107,7 +107,7 @@ class NeuralNet:
             return np.concatenate((subjectWord, verbWord, objectWord))
 
 
-    #generate vectors for predicates
+    #generate vectors for all predicates in NeuralNet class
     def getVectors(self):
         for predicate in self.predicates:
             #deconstruct copulars

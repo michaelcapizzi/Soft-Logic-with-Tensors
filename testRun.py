@@ -7,9 +7,9 @@ import NeuralNet as nn
 
 
 #import predicates
-fPreds = open("Predicates/ALL-predicates-31994.pickle", "rb")
-preds = pickle.load(fPreds)
-fPreds.close()
+# fPreds = open("Predicates/ALL-predicates-31994.pickle", "rb")
+# preds = pickle.load(fPreds)
+# fPreds.close()
 
 
 #create Embedding class
@@ -27,9 +27,13 @@ print ("finished loading word2vec")
     #RELU activation
 testNN = nn.NeuralNet(embeddingClass=w2v, vectorSize=w2v.getVectorSize(),hiddenNodes=300, outputNodes=3 * w2v.getVectorSize(), trainingEpochs=1000, activationFunction="relu")
 
+f = open("Predicates/ALL-predicates-31994.pickle", "rb")
+testNN.predicates = pickle.load(f)
+f.close()
+
 
 #test predicate -> vector
-print preds[0]
-print testNN.getVector(preds[0])
+print testNN.predicates[0]
+print testNN.getVector(testNN.predicates[0])
 
 
