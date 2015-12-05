@@ -24,7 +24,7 @@ class NeuralNet:
     def __init__(self, embeddingClass, vectorSize, hiddenNodes, outputNodes, trainingEpochs, activationFunction, batchSize=None, learningRate=.001, displayStep=None):
         self.embeddingClass = embeddingClass
         self.vectorSize = vectorSize
-        self.predicates = None      #TODO should this be []?
+        self.predicates = None
         self.vectors = []
         self.learningRate = learningRate
         self.trainingEpochs = trainingEpochs
@@ -63,6 +63,23 @@ class NeuralNet:
     def loadEmbeddings(self, fname):
         self.embeddingClass.loadModel(fname)
 
+
+    #generate random predicates
+    def getNegativePredicates(self):
+        negPredList = []
+        numberOfPositivePreds = len(self.predicates)
+        allSubjs = list(map(lambda x: x[0], self.predicates))
+        allVerbs = list(map(lambda x: x[1], self.predicates))
+        allObjs = list(map(lambda x: x[2], self.predicates))
+
+        #iterate as many negative examples as positive
+        for i in range(numberOfPositivePreds):
+            negPred = generateNegativePredicate(allSubjs, allVerbs, allObjs, self.predicates)
+            negPredList.append(negPred)
+        #add to predicate list
+        [self.predicates.append(np) for np in negPredList]
+        #shuffle list
+        random.shuffle(self.predicates)
 
     #generate vector for a given predicate
     def getVector(self, predicate):
@@ -295,7 +312,7 @@ class NeuralNet:
 
 #####################################################
 
-def generateRandomPredicate(listOfSubjects, listOfVerbs, listOfObjects, allPredsList):
+def generateNegativePredicate(listOfSubjects, listOfVerbs, listOfObjects, allPredsList):
     #calculate percentage of preds without object
     noneObjsCount = float(listOfObjects.count(None)) / len(listOfObjects)
     #start with a predicate in list of predicates
