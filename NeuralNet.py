@@ -173,6 +173,19 @@ class NeuralNet:
                 self.vectors.append(v)
 
 
+    #find closest word to a given vector
+        #topN = number of matches to return
+    def getClosestWord(self, vector, topN):
+        return self.embeddingClass.embeddingModel.most_similar([vector], topn=topN)
+
+
+    #get vector similarity of two words
+    def vectorSimV(self, word1, word2):
+        return self.embeddingClass.embeddingModel.similarity(word1, word2)
+
+
+
+
 
 
 ##############################################################################
