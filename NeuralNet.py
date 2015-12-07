@@ -415,12 +415,13 @@ class NeuralNet:
                 diff = avgCost - newCost
                 avgCost = newCost
                 #debugging
-                print("predicate in: ", pred)
-                if isAutoEncoder:
-                    print("predicate out: ", self.getClosestPredicate(self.session.run(self.ffOp, feed_dict={self.input: vector}).reshape((600,)),1))
-                else:
-                    print("label out: ", self.session.run(self.predictOp, feed_dict={self.input: vector}))
-                print("iteration %s, training instance %s: with average cost of %s and diff of %s" %(str(epoch+1), str(i + 1), str(avgCost), str(diff)))
+                if i % 100 == 0:
+                    print("predicate in: ", pred)
+                    if isAutoEncoder:
+                        print("predicate out: ", self.getClosestPredicate(self.session.run(self.ffOp, feed_dict={self.input: vector}).reshape((600,)),1))
+                    else:
+                        print("label out: ", self.session.run(self.predictOp, feed_dict={self.input: vector}))
+                    print("iteration %s, training instance %s: with average cost of %s and diff of %s" %(str(epoch+1), str(i + 1), str(avgCost), str(diff)))
                 #determine if convergence -- ensure after first full iteration of data
                 if epoch > 0 and math.fabs(diff) < convergenceValue:
                     print("Convergence at iteration %s, training instance %s" %(str(epoch+1), str(i+1)))
