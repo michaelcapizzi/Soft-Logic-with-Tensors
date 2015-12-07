@@ -7,6 +7,7 @@ import math
 import random
 
 #TODO fix so shapes of predicate vectors and model match up
+#TODO figure out which cost function to use --- getting negative cost
 
 class NeuralNet:
     """
@@ -20,10 +21,11 @@ class NeuralNet:
         :param outputDimensions
         :param hiddenNodes
         :param activationFunction
+        :param costFunction
         :param hiddenNodes ==> number of nodes in a single hidden layer
         tensorflow documentation ==> https://www.tensorflow.org/versions/master/api_docs/python/index.html
     """
-    def __init__(self, embeddingClass, vectorSize, hiddenNodes, outputNodes, trainingEpochs, activationFunction, batchSize=None, learningRate=.001):
+    def __init__(self, embeddingClass, vectorSize, hiddenNodes, outputNodes, trainingEpochs, activationFunction, costFunction="crossEntropy", batchSize=None, learningRate=.001):
         self.embeddingClass = embeddingClass
         self.vectorSize = vectorSize
         #textual data
@@ -51,6 +53,7 @@ class NeuralNet:
         self.outputDimensions = outputNodes
         self.hiddenNodes = hiddenNodes
         self.activationFunction = activationFunction
+        self.costFunction = costFunction
         #parameters
         self.weights =  {}
         self.biases =   {}
@@ -336,11 +339,19 @@ class NeuralNet:
 
 ##########
 
+    #TODO use squared error or cross entropy?
     #cost
         #output = feedforward
-    def calculateCost(self, outputOp, labels):
-        crossEntropy = tf.nn.softmax_cross_entropy_with_logits(outputOp, labels, name="CrossEntropy")
-        loss = tf.reduce_mean(crossEntropy, name="Loss")
+    def calculateCost(self, outputOp, labels, isAutoEncoder=False):
+        if isAutoEncoder:
+            if self.costFunction == "crossEntropy":
+                crossEntropy = tf.nn.sigmoid_cross_entropy_with_logits(outputOp, labels, name="CrossEntropy")
+            else:
+                crossEntropy = tf.pow(outputOp - labels, 2, name="SquaredError")
+            loss = tf.reduce_mean(crossEntropy, name="Loss")
+        else:
+            crossEntropy = tf.nn.softmax_cross_entropy_with_logits(outputOp, labels, name="CrossEntropy")
+            loss = tf.reduce_mean(crossEntropy, name="Loss")
         return loss
 
 ##########
@@ -366,7 +377,7 @@ class NeuralNet:
             #secondBias set to True
         self.ffOp = self.feedForward(self.input, secondBias=True)
         #costOp
-        self.costOp = self.calculateCost(self.ffOp, self.label)
+        self.costOp = self.calculateCost(self.ffOp, self.label, isAutoEncoder=True)
         #gradientOp
         self.gradientOp = self.train(self.costOp)
         #predictOp
@@ -386,7 +397,7 @@ class NeuralNet:
         #data = (vector, label)
         #optimizer = trainOp
         #topN = top 2 vector matches for debugging
-    def runTraining(self, convergenceValue = .000001, isAutoEncoder=False, topN=2):
+    def runTraining(self, convergenceValue = .000001, isAutoEncoder=False, topN=1):
 
         #initial average cost
         avgCost = 0
@@ -418,13 +429,14 @@ class NeuralNet:
                 if i % 100 == 0:
                     print("predicate in: ", pred)
                     if isAutoEncoder:
-                        print("predicate out: ", self.getClosestPredicate(self.session.run(self.ffOp, feed_dict={self.input: vector}).reshape((600,)),1))
+                        print("predicate out: ", self.getClosestPredicate(self.session.run(self.ffOp, feed_dict={self.input: vector}).reshape((600,)),topN))
                     else:
                         print("label out: ", self.session.run(self.predictOp, feed_dict={self.input: vector}))
                     print("iteration %s, training instance %s: with average cost of %s and diff of %s" %(str(epoch+1), str(i + 1), str(avgCost), str(diff)))
                 #determine if convergence -- ensure after first full iteration of data
-                if epoch > 0 and math.fabs(diff) < convergenceValue:
+                if epoch > 0 and abs(diff) < convergenceValue:
                     print("Convergence at iteration %s, training instance %s" %(str(epoch+1), str(i+1)))
+                    break
         print("Training complete.")
 
 
