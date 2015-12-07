@@ -27,7 +27,8 @@ print ("finished loading word2vec")
     #1000 training epochs
     #RELU activation
 # testNN = nn.NeuralNet(embeddingClass=w2v, vectorSize=w2v.getVectorSize(),hiddenNodes=300, outputNodes=3 * w2v.getVectorSize(), trainingEpochs=2, activationFunction="relu")
-testNN = nn.NeuralNet(embeddingClass=w2v, vectorSize=w2v.getVectorSize(),hiddenNodes=300, outputNodes=3 * w2v.getVectorSize(), trainingEpochs=2, activationFunction="tanh", costFunction="RMSE")
+# testNN = nn.NeuralNet(embeddingClass=w2v, vectorSize=w2v.getVectorSize(),hiddenNodes=300, outputNodes=3 * w2v.getVectorSize(), trainingEpochs=2, activationFunction="tanh", costFunction="RMSE")
+testNN = nn.NeuralNet(embeddingClass=w2v, vectorSize=w2v.getVectorSize(),hiddenNodes=300, outputNodes=3 * w2v.getVectorSize(), trainingEpochs=10, activationFunction="tanh", costFunction="RMSE", learningRate=None)
 
 #loading true predicates
 # f = open("Predicates/ALL-predicates-31994.pickle", "rb")
