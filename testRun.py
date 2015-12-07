@@ -3,6 +3,7 @@ __author__ = 'mcapizzi'
 import pickle
 import Embedding as e
 import NeuralNet as nn
+import tensorflow as tf
 #test run of the whole process
 
 
@@ -28,12 +29,14 @@ print ("finished loading word2vec")
 testNN = nn.NeuralNet(embeddingClass=w2v, vectorSize=w2v.getVectorSize(),hiddenNodes=300, outputNodes=3 * w2v.getVectorSize(), trainingEpochs=2, activationFunction="relu")
 
 #loading true predicates
-f = open("Predicates/ALL-predicates-31994.pickle", "rb")
+# f = open("Predicates/ALL-predicates-31994.pickle", "rb")
+f = open("Predicates/FILTERED-predicates.pickle", "rb")
 testNN.predicates = pickle.load(f)
 f.close()
 
 #loading false predicates
-f = open("Predicates/ALL-negative_predicates-31994.pickle", "rb")
+# f = open("Predicates/ALL-negative_predicates-31994.pickle", "rb")
+f = open("Predicates/FILTERED-negative_predicates.pickle", "rb")
 testNN.negPredicates = pickle.load(f)
 f.close()
 
@@ -51,6 +54,10 @@ testNN.initializeParameters(useAutoEncoder=False)
 #build computational graph
 print("build computational graph")
 testNN.buildComputationGraph()
+
+#initialize variables
+# testNN.initializeVariables()
+testNN.session.run(tf.initialize_all_variables())       #TODO - must done manually --- why?
 
 #run training
 # testNN.runTraining(isAutoEncoder=True))

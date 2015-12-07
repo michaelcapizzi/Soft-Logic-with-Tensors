@@ -6,6 +6,7 @@ import numpy as np
 import math
 import random
 
+#TODO fix so shapes of predicate vectors and model match up
 
 class NeuralNet:
     """
@@ -56,7 +57,7 @@ class NeuralNet:
         self.input = tf.placeholder("float", name="Input", shape=[None, self.inputDimensions])
         self.label = tf.placeholder("float", name="LabelDistribution", shape=[None, outputNodes])
         #computation graph
-        self.init = tf.initialize_all_variables()
+        self.init = tf.initialize_all_variables()           #TODO must be done manually ???
         self.ffOp = None
         self.costOp = None
         self.gradientOp = None
@@ -172,7 +173,7 @@ class NeuralNet:
         for i in range(len(predList)):
             print("%s of %s predicates" %(str(i + 1), str(len(predList))))
             v = self.getVector(predList[i])
-            if v:
+            if v is not None:
                 predsToKeep.append(predList[i])
         return predsToKeep
 
@@ -237,7 +238,7 @@ class NeuralNet:
         objVec = predVector[self.vectorSize * 2:]
         possibleSubjs = self.getClosestWord(subjVec, topN)
         possibleVerbs = self.getClosestWord(verbVec, topN)
-        if objVec == np.zeros(self.vectorSize):
+        if np.all(objVec == np.zeros(self.vectorSize)):
             possibleObjs = None
         else:
             possibleObjs = self.getClosestWord(objVec, topN)
@@ -361,8 +362,6 @@ class NeuralNet:
 # #############################################################################
 
     def buildComputationGraph(self):
-        #initialize variables
-        self.session.run(self.init)
         #feedforward op
             #secondBias set to True
         self.ffOp = self.feedForward(self.input, secondBias=True)
@@ -372,6 +371,11 @@ class NeuralNet:
         self.gradientOp = self.train(self.costOp)
         #predictOp
         self.predictOp = self.predict(self.ffOp)
+
+
+    def initializeVariables(self):
+        #initialize variables
+        self.session.run(self.init)
 
 # #############################################################################
 # train
@@ -383,6 +387,7 @@ class NeuralNet:
         #optimizer = trainOp
         #topN = top 2 vector matches for debugging
     def runTraining(self, convergenceValue = .000001, isAutoEncoder=False, topN=2):
+
         #initial average cost
         avgCost = 0
         #training epoch
@@ -410,12 +415,12 @@ class NeuralNet:
                 diff = avgCost - newCost
                 avgCost = newCost
                 #debugging
-                print("predicate in: " + pred + ";")
+                print("predicate in: ", pred)
                 if isAutoEncoder:
-                    print("predicate out: " + self.getClosestPredicate(vector, topN))
+                    print("predicate out: ", self.getClosestPredicate(self.session.run(self.ffOp, feed_dict={self.input: vector}).reshape((600,)),1))
                 else:
-                    print("label out: " + self.session.run(self.predictOp, feed_dict={self.input: vector}))
-                print("iteration %s, training instance %s: with average cost of %s and diff of %" %(str(epoch+1), str(i + 1), str(avgCost), str(diff)))
+                    print("label out: ", self.session.run(self.predictOp, feed_dict={self.input: vector}))
+                print("iteration %s, training instance %s: with average cost of %s and diff of %s" %(str(epoch+1), str(i + 1), str(avgCost), str(diff)))
                 #determine if convergence -- ensure after first full iteration of data
                 if epoch > 0 and math.fabs(diff) < convergenceValue:
                     print("Convergence at iteration %s, training instance %s" %(str(epoch+1), str(i+1)))
