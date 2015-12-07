@@ -13,26 +13,38 @@ class NeuralNet:
         number of classes ==> binary but with softmax layers
         :param embeddingClass ==> the embedding class from which the word2vecs can be loaded
         :param vectorSize ==> length of each individual embedding vector
-        input ==> with each concatenated vector as a ROW
         :param learningRate ==> for gradient descent
         :param trainingEpochs ==> for gradient descent
         :param batchSize ==> for gradient descent
-        :param displayStep = ???
+        :param outputDimensions
+        :param hiddenNodes
+        :param activationFunction
         :param hiddenNodes ==> number of nodes in a single hidden layer
+        tensorflow documentation ==> https://www.tensorflow.org/versions/master/api_docs/python/index.html
     """
-    def __init__(self, embeddingClass, vectorSize, hiddenNodes, outputNodes, trainingEpochs, activationFunction, batchSize=None, learningRate=.001, displayStep=None):
+    def __init__(self, embeddingClass, vectorSize, hiddenNodes, outputNodes, trainingEpochs, activationFunction, batchSize=None, learningRate=.001):
         self.embeddingClass = embeddingClass
         self.vectorSize = vectorSize
+        #textual data
         self.predicates = None
         self.negPredicates = None
         self.allPredicates = []
+        #NN input and label data
+        self.predVectors = []           #only used to batch convert predicates
         self.predLabels = []
-        self.predVectors = []
         #hyperparameters
-        self.learningRate = learningRate
+        if not learningRate:            #if no learning rate is set, use exponential_decay
+            self.learningRate = tf.train.exponential_decay(
+                learning_rate=0.01,
+                global_step= 1,
+                decay_steps=50000,   #should be size of data: estimated at 50k
+                decay_rate= 0.95,
+                staircase=True
+            )
+        else:
+            self.learningRate = learningRate
         self.trainingEpochs = trainingEpochs
         self.batchSize = batchSize
-        self.displayStep = displayStep
         self.inputDimensions = 3 * vectorSize
         self.outputDimensions = outputNodes
         self.hiddenNodes = hiddenNodes
@@ -71,11 +83,14 @@ class NeuralNet:
         #return thing
         return thing
 
+########
 
+    #TODO fix or dump -- doesn't work
     #load embeddings
     def loadEmbeddings(self, fname):
         self.embeddingClass.loadModel(fname)
 
+########
 
     #generate random predicates
     def getNegativePredicates(self):
@@ -97,9 +112,14 @@ class NeuralNet:
         return negPredList
 
 
-    #TODO build
-    # #generate labels
-    # def getLabels(self):
+    # #build allPredicates plus labels
+    def buildDataset(self):
+        labeledPos = [(pp, 1) for pp in self.predicates]
+        labeledNeg = [(pn, 1) for pn in self.negPredicates]
+        allPreds = labeledPos + labeledNeg
+        random.shuffle(allPreds)
+        self.allPredicates = map(lambda x: x[0], allPreds)
+        self.predLabels = map(lambda x: x[1], allPreds)
 
 
     #generate vector for a given predicate
@@ -189,6 +209,7 @@ class NeuralNet:
                 v = np.concatenate((subjectWord, verbWord, objectWord))
                 self.predVectors.append(v)
 
+########
 
     #find closest word to a given vector
         #topN = number of matches to return
@@ -215,6 +236,7 @@ class NeuralNet:
     def vectorSimV(self, word1, word2):
         return self.embeddingClass.embeddingModel.similarity(word1, word2)
 
+########
 
     #save variables -- saves all variables
     def saveVariables(self, fname):
@@ -260,7 +282,7 @@ class NeuralNet:
                                             self.weights["W1"]
                                         ),
                             self.biases["b1"]
-                        ,name="Input->Hidden"
+                        ,name="InputToHidden"
                         )
 
         #a1
@@ -282,13 +304,13 @@ class NeuralNet:
                                                 self.weights["W2"]
                                             ),
                                 self.biases["b2"]
-                            ,name="Hidden->Output")
+                            ,name="HiddenToOutput")
 
         else:
             z2 =    tf.matmul   (
                                     a1,
                                     self.weights["W2"]
-                                ,name="Hidden->Output")
+                                ,name="HiddenToOutput")
 
 
         # #a2                                       #don't do this here (handled by cost
@@ -336,33 +358,37 @@ class NeuralNet:
         #predictOp
         self.predictOp = self.predict(self.ffOp)
 
+# #############################################################################
+# train
+# #############################################################################
+
     #run training
         #data = (vector, label)
         #optimizer = trainOp
         #topN = top 2 vector matches for debugging
-    def runTraining(self, allPredicates, allLabels, gradientOp, costOp, convergenceValue = .000001, isAutoEncoder=False, topN=2):
+    def runTraining(self, convergenceValue = .000001, isAutoEncoder=False, topN=2):
         self.session.run(self.init)
         #initial average cost
         avgCost = 0
         #training epoch
         for epoch in range(self.trainingEpochs):
             #stochastic gradient descent
-            for i in range(len(self.predicates) + len(self.negPredicates)):
+            for i in range(len(self.allPredicates)):
                 #run gradient step
                 #the predicate to be fed in
-                pred = allPredicates[i]
+                pred = self.allPredicates[i]
                 #the vector for that predicate
                 vector = self.getVector(pred)
                 #training step
                 if isAutoEncoder:
-                    self.session.run(gradientOp, feed_dict={self.input: vector, self.label: vector})
+                    self.session.run(self.gradientOp, feed_dict={self.input: vector, self.label: vector})
                 else:
-                    self.session.run(gradientOp, feed_dict={self.input: vector, self.label: allLabels[i]})
+                    self.session.run(self.gradientOp, feed_dict={self.input: vector, self.label: self.predLabels[i]})
                 #compute average cost
                 if isAutoEncoder:
-                    newCost = self.session.run(costOp, feed_dict={self.input: vector, self.label: vector})
+                    newCost = self.session.run(self.costOp, feed_dict={self.input: vector, self.label: vector})
                 else:
-                    newCost = self.session.run(costOp, feed_dict={self.input: vector, self.label: allLabels[i]})
+                    newCost = self.session.run(self.costOp, feed_dict={self.input: vector, self.label: self.predLabels[i]})
                 #calculate diff from previous iteration
                 diff = avgCost - newCost
                 avgCost = newCost
@@ -371,7 +397,7 @@ class NeuralNet:
                 if isAutoEncoder:
                     print("predicate out: " + self.getClosestPredicate(vector, topN))
                 else:
-                    print("label out: " + self.session.run(predictOp, feed_dict={self.input: vector}))
+                    print("label out: " + self.session.run(self.predictOp, feed_dict={self.input: vector}))
                 print("iteration %s, training instance %s: with average cost of %s and diff of %" %(str(epoch+1), str(i + 1), str(avgCost), str(diff)))
                 #determine if convergence
                 if i > 0 and math.fabs(diff) < convergenceValue:
@@ -384,11 +410,9 @@ class NeuralNet:
     def closeSession(self):
         self.session.close()
 
-
-    #run prediction
-    #use feedforward
-
 #####################################################
+
+#more utils
 
 def generateNegativePredicate(listOfSubjects, listOfVerbs, listOfObjects, allPredsList):
     #calculate percentage of preds without object

@@ -25,7 +25,7 @@ print ("finished loading word2vec")
     #300 hidden nodes
     #1000 training epochs
     #RELU activation
-testNN = nn.NeuralNet(embeddingClass=w2v, vectorSize=w2v.getVectorSize(),hiddenNodes=300, outputNodes=3 * w2v.getVectorSize(), trainingEpochs=1000, activationFunction="relu")
+testNN = nn.NeuralNet(embeddingClass=w2v, vectorSize=w2v.getVectorSize(),hiddenNodes=300, outputNodes=3 * w2v.getVectorSize(), trainingEpochs=2, activationFunction="relu")
 
 #loading true predicates
 f = open("Predicates/ALL-predicates-31994.pickle", "rb")
@@ -38,8 +38,24 @@ testNN.negPredicates = pickle.load(f)
 f.close()
 
 
-#test predicate -> vector
-print testNN.predicates[0]
-print testNN.getVector(testNN.predicates[0])
+#build full dataset
+print("building dataset")
+testNN.buildDataset()
+
+
+#initialize parameters
+print("initializing parameters -- randomly")
+testNN.initializeParameters(useAutoEncoder=False)
+
+
+#build computational graph
+print("build computational graph")
+testNN.buildComputationGraph()
+
+#run training
+# testNN.runTraining()
+
+
+
 
 
