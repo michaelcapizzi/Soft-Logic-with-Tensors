@@ -6,7 +6,6 @@ import numpy as np
 import math
 import random
 
-#TODO add autoencoder option
 
 class NeuralNet:
     """
@@ -26,7 +25,10 @@ class NeuralNet:
         self.vectorSize = vectorSize
         self.predicates = None
         self.negPredicates = None
-        self.vectors = []
+        self.allPredicates = []
+        self.predLabels = []
+        self.predVectors = []
+        #hyperparameters
         self.learningRate = learningRate
         self.trainingEpochs = trainingEpochs
         self.batchSize = batchSize
@@ -35,13 +37,23 @@ class NeuralNet:
         self.outputDimensions = outputNodes
         self.hiddenNodes = hiddenNodes
         self.activationFunction = activationFunction
-        self.input = tf.placeholder("float", name="Input", shape=[None, self.inputDimensions])
-        self.label = tf.placeholder("float", name="LabelDistribution", shape=[None, outputNodes])         #a distribution over T/F
+        #parameters
         self.weights =  {}
-        self.biases =   {}   #b initialized with standard randomized values
-        self.session = tf.Session()
+        self.biases =   {}
+        self.input = tf.placeholder("float", name="Input", shape=[None, self.inputDimensions])
+        self.label = tf.placeholder("float", name="LabelDistribution", shape=[None, outputNodes])
+        #computation graph
         self.init = tf.initialize_all_variables()
+        self.ffOp = None
+        self.costOp = None
+        self.gradientOp = None
+        self.predictOp = None
+        #Tensorflow session
+        self.session = tf.Session()
 
+
+##############################################################################
+#utils
 ##############################################################################
 
     #pickle thing
@@ -83,6 +95,11 @@ class NeuralNet:
         #shuffle list
         # random.shuffle(self.negPredicates)
         return negPredList
+
+
+    #TODO build
+    # #generate labels
+    # def getLabels(self):
 
 
     #generate vector for a given predicate
@@ -170,7 +187,7 @@ class NeuralNet:
                 objectWord = np.zeros(self.vectorSize)
             if subjectWord is not None and verbWord is not None:
                 v = np.concatenate((subjectWord, verbWord, objectWord))
-                self.vectors.append(v)
+                self.predVectors.append(v)
 
 
     #find closest word to a given vector
@@ -179,16 +196,42 @@ class NeuralNet:
         return self.embeddingClass.embeddingModel.most_similar([vector], topn=topN)
 
 
+    #find closest predicate to a given predicate vector
+    def getClosestPredicate(self, predVector, topN):
+        subjVec = predVector[:self.vectorSize]
+        verbVec = predVector[self.vectorSize: self.vectorSize * 2]
+        objVec = predVector[self.vectorSize * 2:]
+        possibleSubjs = self.getClosestWord(subjVec, topN)
+        possibleVerbs = self.getClosestWord(verbVec, topN)
+        if objVec == np.zeros(self.vectorSize):
+            possibleObjs = None
+        else:
+            possibleObjs = self.getClosestWord(objVec, topN)
+        possible = (possibleSubjs, possibleVerbs, possibleObjs)
+        return possible
+
+
     #get vector similarity of two words
     def vectorSimV(self, word1, word2):
         return self.embeddingClass.embeddingModel.similarity(word1, word2)
 
 
+    #save variables -- saves all variables
+    def saveVariables(self, fname):
+        saver = tf.train.Saver()
+        saver.save(self.session, fname + ".ckpt")
 
 
+    #load variables -- loads all variables from saved
+    def loadVariables(self, fname):
+        saver = tf.train.Saver()
+        saver.restore(self.session, fname + ".ckpt")
 
 
 ##############################################################################
+#variable setup
+##############################################################################
+
     #TODO confirm this is done correctly
     #initialize weights
     def initializeParameters(self, useAutoEncoder=False, existingW1=None, existingW2=None):
@@ -204,7 +247,9 @@ class NeuralNet:
         self.biases["b2"] = tf.Variable(tf.random_normal([1, self.outputDimensions], mean=0, stddev=math.sqrt(float(6) / float(self.inputDimensions + self.outputDimensions + 1))), name="b2")
 
 
-##########
+##############################################################################
+#computational graph
+##############################################################################
 
     #create feed-forward model
     def feedForward(self, inputX, secondBias):
@@ -253,10 +298,8 @@ class NeuralNet:
         # return a2
         return z2
 
-    #TODO must generate the op
-        #ffOp = feedforward(self.input, self.weights["W1"], self.weights["W2"], self.biases["b1"], self.biases["b2"], CHOOSE ACTIVATION)
-
 ##########
+
     #cost
         #output = feedforward
     def calculateCost(self, outputOp, labels):
@@ -264,59 +307,76 @@ class NeuralNet:
         loss = tf.reduce_mean(crossEntropy, name="Loss")
         return loss
 
-    #TODO must generate op
-        #costOp = calculateCost(ffOp, self.labels)
-
 ##########
+
     #optimizer
         #cost = calculateCost
     def train(self, costOp):
         return tf.train.GradientDescentOptimizer(self.learningRate).minimize(costOp)
 
-    #TODO must generate op
-        #gradientOp = train(costOp)
-
 ##########
+
     #predict
     def predict(self, feedforwardOp):
         softmax = tf.nn.softmax(feedforwardOp, name="Softmax")
         return softmax
 
-    #TODO must generate op
-        #predictOp = predict(ffOp)
+# #############################################################################
+# build ops
+# #############################################################################
 
-##########
-    #TODO include some way of training until convergence
-    #TODO rebuild training method as stochastic gradient descent
-        # if i > 0 and diff < .000001:
-        #     break
-        # else:
-        #     #print
-        #     print "iteration %s with average cost of %s and diff of %s" %(str(i),str(avgCost), str(diff))
+    def buildComputationGraph(self):
+        #feedforward op
+            #secondBias set to True
+        self.ffOp = self.feedForward(self.input, secondBias=True)
+        #costOp
+        self.costOp = self.calculateCost(self.ffOp, self.label)
+        #gradientOp
+        self.gradientOp = self.train(self.costOp)
+        #predictOp
+        self.predictOp = self.predict(self.ffOp)
+
     #run training
         #data = (vector, label)
         #optimizer = trainOp
-    def runTraining(self, trainingData, gradientOp, costOp, isAutoEncoder=False):
+        #topN = top 2 vector matches for debugging
+    def runTraining(self, allPredicates, allLabels, gradientOp, costOp, convergenceValue = .000001, isAutoEncoder=False, topN=2):
         self.session.run(self.init)
         #initial average cost
         avgCost = 0
-
-        #training cycle
+        #training epoch
         for epoch in range(self.trainingEpochs):
-            #run gradient step
-            if isAutoEncoder:
-                self.session.run(gradientOp, feed_dict={self.input: trainingData[0], self.label: trainingData[0]})
-            else:
-                self.session.run(gradientOp, feed_dict={self.input: trainingData[0], self.label: trainingData[1]})
-            #compute average cost
-            if isAutoEncoder:
-                newCost = self.session.run(costOp, feed_dict={self.input: trainingData[0], self.label: trainingData[0]})
-            else:
-                newCost = self.session.run(costOp, feed_dict={self.input: trainingData[0], self.label: trainingData[1]})
-            #calculate diff from previous iteration
-            diff = avgCost - newCost
-            avgCost = newCost
-            print("iteration %s with average cost of %s and diff of %" %(str(epoch+1), str(avgCost), str(diff)))
+            #stochastic gradient descent
+            for i in range(len(self.predicates) + len(self.negPredicates)):
+                #run gradient step
+                #the predicate to be fed in
+                pred = allPredicates[i]
+                #the vector for that predicate
+                vector = self.getVector(pred)
+                #training step
+                if isAutoEncoder:
+                    self.session.run(gradientOp, feed_dict={self.input: vector, self.label: vector})
+                else:
+                    self.session.run(gradientOp, feed_dict={self.input: vector, self.label: allLabels[i]})
+                #compute average cost
+                if isAutoEncoder:
+                    newCost = self.session.run(costOp, feed_dict={self.input: vector, self.label: vector})
+                else:
+                    newCost = self.session.run(costOp, feed_dict={self.input: vector, self.label: allLabels[i]})
+                #calculate diff from previous iteration
+                diff = avgCost - newCost
+                avgCost = newCost
+                #debugging
+                print("predicate in: " + pred + ";")
+                if isAutoEncoder:
+                    print("predicate out: " + self.getClosestPredicate(vector, topN))
+                else:
+                    print("label out: " + self.session.run(predictOp, feed_dict={self.input: vector}))
+                print("iteration %s, training instance %s: with average cost of %s and diff of %" %(str(epoch+1), str(i + 1), str(avgCost), str(diff)))
+                #determine if convergence
+                if i > 0 and math.fabs(diff) < convergenceValue:
+                    print("Convergence at iteration %s, training instance %s" %(str(epoch+1), str(i+1)))
+        print("Training complete.")
 
 
 ##########
