@@ -53,7 +53,7 @@ print("build computational graph")
 testNN.buildComputationGraph()
 
 #run training
-# testNN.runTraining()
+# testNN.runTraining(isAutoEncoder=True))
 
 
 

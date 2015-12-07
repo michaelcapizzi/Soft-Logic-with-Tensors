@@ -29,9 +29,10 @@ class NeuralNet:
         self.predicates = None
         self.negPredicates = None
         self.allPredicates = []
+        self.predLabels = []
+        self.skippedPredicates = []     #for predicates who have no vectors
         #NN input and label data
         self.predVectors = []           #only used to batch convert predicates
-        self.predLabels = []
         #hyperparameters
         if not learningRate:            #if no learning rate is set, use exponential_decay
             self.learningRate = tf.train.exponential_decay(
@@ -165,49 +166,61 @@ class NeuralNet:
             return np.concatenate((subjectWord, verbWord, objectWord))
 
 
-    #generate vectors for all predicates in NeuralNet class
-    def getVectors(self):
-        for predicate in self.predicates:
-            #deconstruct copulars
-            if "_" in predicate[1]:
-                predPortion = predicate[1][3:]
-                predicate = (predicate[0], "is", predPortion)
+    # #filter out predicates not in embedding
+    def filterOutPreds(self, predList):
+        predsToKeep = []
+        for i in range(len(predList)):
+            print("%s of %s predicates" %(str(i + 1), str(len(predList))))
+            v = self.getVector(predList[i])
+            if v:
+                predsToKeep.append(predList[i])
+        return predsToKeep
 
-            if predicate[0]:
-            #if the uppercase exists
-                capture = self.embeddingClass.getVector(predicate[0])
-                if capture is not None:
-                    subjectWord = capture
-                #back off to trying lowercase
-                else:
-                    subjectWord = self.embeddingClass.getVector(predicate[0].lower())
-            else:
-                subjectWord = None
-            if predicate[1]:
-                #if the uppercase exists
-                capture = self.embeddingClass.getVector(predicate[1])
-                if capture is not None:
-                    verbWord = capture
-                #back off to trying lowercase
-                else:
-                    verbWord = self.embeddingClass.getVector(predicate[1].lower())
-            else:
-                verbWord = None
-            if predicate[2]:
-                #if the uppercase exists
-                capture = self.embeddingClass.getVector(predicate[2])
-                if capture is not None:
-                    objectWord = capture
-                #back off to trying lowercase
-                else:
-                    objectWord = self.embeddingClass.getVector(predicate[2].lower())
-                    if objectWord is None:
-                        objectWord = np.zeros(self.vectorSize)
-            else:
-                objectWord = np.zeros(self.vectorSize)
-            if subjectWord is not None and verbWord is not None:
-                v = np.concatenate((subjectWord, verbWord, objectWord))
-                self.predVectors.append(v)
+
+
+    #generate vectors for all predicates in NeuralNet class
+    # def getVectors(self):
+    #     for predicate in self.predicates:
+    #         #deconstruct copulars
+    #         if "_" in predicate[1]:
+    #             predPortion = predicate[1][3:]
+    #             predicate = (predicate[0], "is", predPortion)
+    #
+    #         if predicate[0]:
+    #         #if the uppercase exists
+    #             capture = self.embeddingClass.getVector(predicate[0])
+    #             if capture is not None:
+    #                 subjectWord = capture
+    #             #back off to trying lowercase
+    #             else:
+    #                 subjectWord = self.embeddingClass.getVector(predicate[0].lower())
+    #         else:
+    #             subjectWord = None
+    #         if predicate[1]:
+    #             #if the uppercase exists
+    #             capture = self.embeddingClass.getVector(predicate[1])
+    #             if capture is not None:
+    #                 verbWord = capture
+    #             #back off to trying lowercase
+    #             else:
+    #                 verbWord = self.embeddingClass.getVector(predicate[1].lower())
+    #         else:
+    #             verbWord = None
+    #         if predicate[2]:
+    #             #if the uppercase exists
+    #             capture = self.embeddingClass.getVector(predicate[2])
+    #             if capture is not None:
+    #                 objectWord = capture
+    #             #back off to trying lowercase
+    #             else:
+    #                 objectWord = self.embeddingClass.getVector(predicate[2].lower())
+    #                 if objectWord is None:
+    #                     objectWord = np.zeros(self.vectorSize)
+    #         else:
+    #             objectWord = np.zeros(self.vectorSize)
+    #         if subjectWord is not None and verbWord is not None:
+    #             v = np.concatenate((subjectWord, verbWord, objectWord))
+    #             self.predVectors.append(v)
 
 ########
 
@@ -348,6 +361,8 @@ class NeuralNet:
 # #############################################################################
 
     def buildComputationGraph(self):
+        #initialize variables
+        self.session.run(self.init)
         #feedforward op
             #secondBias set to True
         self.ffOp = self.feedForward(self.input, secondBias=True)
@@ -362,12 +377,12 @@ class NeuralNet:
 # train
 # #############################################################################
 
+    #TODO code in for batch
     #run training
         #data = (vector, label)
         #optimizer = trainOp
         #topN = top 2 vector matches for debugging
     def runTraining(self, convergenceValue = .000001, isAutoEncoder=False, topN=2):
-        self.session.run(self.init)
         #initial average cost
         avgCost = 0
         #training epoch
@@ -379,6 +394,8 @@ class NeuralNet:
                 pred = self.allPredicates[i]
                 #the vector for that predicate
                 vector = self.getVector(pred)
+                #reshape vector
+                vector = vector.reshape((1,vector.shape[0]))
                 #training step
                 if isAutoEncoder:
                     self.session.run(self.gradientOp, feed_dict={self.input: vector, self.label: vector})
@@ -399,8 +416,8 @@ class NeuralNet:
                 else:
                     print("label out: " + self.session.run(self.predictOp, feed_dict={self.input: vector}))
                 print("iteration %s, training instance %s: with average cost of %s and diff of %" %(str(epoch+1), str(i + 1), str(avgCost), str(diff)))
-                #determine if convergence
-                if i > 0 and math.fabs(diff) < convergenceValue:
+                #determine if convergence -- ensure after first full iteration of data
+                if epoch > 0 and math.fabs(diff) < convergenceValue:
                     print("Convergence at iteration %s, training instance %s" %(str(epoch+1), str(i+1)))
         print("Training complete.")
 
@@ -434,4 +451,6 @@ def generateNegativePredicate(listOfSubjects, listOfVerbs, listOfObjects, allPre
         pred = (subjectWord, verbWord, objectWord)
 
     return pred
+
+
 
