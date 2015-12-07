@@ -6,8 +6,9 @@ import numpy as np
 import math
 import random
 
-#TODO fix so shapes of predicate vectors and model match up
-#TODO figure out which cost function to use --- getting negative cost
+#TODO add penalty term to RMSE cost function
+#TODO determine convergence method -- perhaps use separate steps for gradient
+    #https://www.tensorflow.org/versions/master/api_docs/python/train.html#Optimizer.minimize
 
 class NeuralNet:
     """
@@ -167,7 +168,7 @@ class NeuralNet:
         else:
             objectWord = np.zeros(self.vectorSize)
         if subjectWord is not None and verbWord is not None:
-            return np.concatenate((subjectWord, verbWord, objectWord))
+            return np.concatenate((subjectWord, verbWord, objectWord)).reshape((1,self.vectorSize*3))       #returns in appropriate shape
 
 
     # #filter out predicates not in embedding
@@ -236,12 +237,13 @@ class NeuralNet:
 
     #find closest predicate to a given predicate vector
     def getClosestPredicate(self, predVector, topN):
+        # predVector = predVector.reshape((predVector.shape[1],))
         subjVec = predVector[:self.vectorSize]
         verbVec = predVector[self.vectorSize: self.vectorSize * 2]
         objVec = predVector[self.vectorSize * 2:]
         possibleSubjs = self.getClosestWord(subjVec, topN)
         possibleVerbs = self.getClosestWord(verbVec, topN)
-        if np.all(objVec == np.zeros(self.vectorSize)):
+        if np.all(objVec == np.zeros(self.vectorSize)):         #TODO set up other conditions for no object (like sum of all dimensions < small number?)
             possibleObjs = None
         else:
             possibleObjs = self.getClosestWord(objVec, topN)
@@ -339,16 +341,24 @@ class NeuralNet:
 
 ##########
 
-    #TODO use squared error or cross entropy?
     #cost
         #output = feedforward
     def calculateCost(self, outputOp, labels, isAutoEncoder=False):
         if isAutoEncoder:
             if self.costFunction == "crossEntropy":
                 crossEntropy = tf.nn.sigmoid_cross_entropy_with_logits(outputOp, labels, name="CrossEntropy")
+                loss = tf.reduce_mean(crossEntropy, name="Loss")
             else:
-                crossEntropy = tf.pow(outputOp - labels, 2, name="SquaredError")
-            loss = tf.reduce_mean(crossEntropy, name="Loss")
+                squaredError = tf.nn.l2_loss(outputOp - labels, name="SquaredError")
+                # squaredError = tf.pow(outputOp - labels, 2, name="SquaredError")
+                # squaredError = tf.add(
+                #                         tf.nn.l2_loss(outputOp - labels, name="SquaredError")
+                #                         tf.add  (
+                #                                 self.weights["W1"].eval(session=self.session).sum(),
+                #                                 self.weights["W2"].eval(session=self.session).sum()
+                #                                 ),
+                #                         name="RegularizationTerm")
+                loss = tf.reduce_mean(squaredError, name="Loss")
         else:
             crossEntropy = tf.nn.softmax_cross_entropy_with_logits(outputOp, labels, name="CrossEntropy")
             loss = tf.reduce_mean(crossEntropy, name="Loss")
@@ -411,7 +421,7 @@ class NeuralNet:
                 #the vector for that predicate
                 vector = self.getVector(pred)
                 #reshape vector
-                vector = vector.reshape((1,vector.shape[0]))
+                # vector = vector.reshape((1,vector.shape[0]))
                 #training step
                 if isAutoEncoder:
                     self.session.run(self.gradientOp, feed_dict={self.input: vector, self.label: vector})
