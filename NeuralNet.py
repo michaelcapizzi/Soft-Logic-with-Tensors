@@ -420,7 +420,7 @@ class NeuralNet:
 # train
 # #############################################################################
 
-    #TODO code in for batch
+    #TODO add code for batch
     #run training
         #data = (vector, label)
         #optimizer = trainOp
@@ -454,7 +454,7 @@ class NeuralNet:
                 diff = avgCost - newCost
                 avgCost = newCost
                 #debugging
-                if i % 500 == 0:
+                if (i + epoch) % 500 == 0:              #will ensure that different predicates appear for debugging at each iteration
                     print("predicate in: ", pred)
                     if isAutoEncoder:
                         print("predicate out: ", self.getClosestPredicate(self.session.run(self.ffOp, feed_dict={self.input: vector}).reshape((600,)),topN, True))
