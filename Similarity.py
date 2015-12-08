@@ -18,7 +18,8 @@ class Similarity:
 
     def __init__(self, predicate, nnClass):
         self.predicate = predicate
-        self.vector = None
+        # self.vector = None
+        self.vector = nnClass.getVector(predicate)
         self.nnClass = nnClass
         self.closestPredicates = None
         self.predicatesRankedCosSim = None
@@ -64,8 +65,14 @@ class Similarity:
 
         #return sorted list
         sortedPreds = list(reversed(sorted(cartesianProdCondensed, key=lambda x: x[1])))
-        self.predicatesRankedCosSim = sortedPreds
-        return sortedPreds
+        #add None back in
+        sortedPredsPlusNone = []
+        for p in sortedPreds:
+            if len(p[0]) == 2:
+                pNone = (p[0][0], p[0][1], None)
+            sortedPredsPlusNone.append((pNone, p[1]))
+        self.predicatesRankedCosSim = sortedPredsPlusNone
+        return sortedPredsPlusNone
 
 
     #ranks predicates by truth value of NN output
@@ -80,7 +87,7 @@ class Similarity:
         self.predicatesRankedNN = sortedPreds
         return sortedPreds
 
-
+    #TODO figure out how to include rankeval stuff
     #evaluate rankings
         #gold = self.predicatesRankedCosSim
         #model = self.predicatesRankedNN
