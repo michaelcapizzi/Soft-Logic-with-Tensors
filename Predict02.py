@@ -41,10 +41,13 @@ print("building dataset")
 testNN.buildDataset()
 
 
-#initialize parameters
-print("initializing parameters -- randomly")
-testNN.initializeParameters(useAutoEncoder=True)
+#initialize all variables
+testNN.initializeParameters(useAutoEncoder=False)
 
+#then override with saved parameters
+#TODO test to ensure this works
+testNN.loadVariables("Variables/variables_NN_tanh-crossEntropy-decayedLR-10iters")
+#otherwise load each separately
 
 #build computational graph
 print("build computational graph")
@@ -56,17 +59,5 @@ testNN.buildComputationGraph()
 testNN.session.run(tf.initialize_all_variables())       #TODO - must done manually --- why?
 
 
-#run training
-testNN.runTraining(isAutoEncoder=False)
-
-
-#save parameters
-testNN.saveVariables("Variables/variables_NN_tanh-loss-decayedLR-10iters.ckpt")
-
-
-
-
-
-
-
-
+#ready to predict
+# testNN.session.run(testNN.predictOp, feed_dict={testNN.input: ???})

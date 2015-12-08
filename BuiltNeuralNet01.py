@@ -60,10 +60,10 @@ testNN.buildComputationGraph()
 #initialize variables
 # testNN.initializeVariables()
 testNN.session.run(tf.initialize_all_variables())       #TODO - must done manually --- why?
-#
-#
-# #run training
-# testNN.runTraining(isAutoEncoder=False)
+
+
+#run training
+testNN.runTraining(isAutoEncoder=False)
 #
 #
 # #save parameters
