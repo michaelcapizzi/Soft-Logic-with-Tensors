@@ -4,6 +4,10 @@ import itertools
 import sys
 rank_eval_dir = "/home/mcapizzi/rankeval-master/src/"
 sys.path.append(rank_eval_dir)
+from evaluation.ranking.set import kendall_tau_set
+from evaluation.ranking.set import mrr
+from evaluation.ranking.set import avg_ndgc_err
+
 
 class Similarity:
     """
@@ -19,6 +23,9 @@ class Similarity:
         self.closestPredicates = None
         self.predicatesRankedCosSim = None
         self.predicatesRankedNN = None
+        self.kendallTau = None
+        self.MRR = None
+        self.NDGC = None
 
 
     def getVector(self):
@@ -77,7 +84,7 @@ class Similarity:
     #evaluate rankings
         #gold = self.predicatesRankedCosSim
         #model = self.predicatesRankedNN
-    def evaluateRanks(self):
+    def evaluateRanks(self, rankMetric):
         #convert each rank to indices
         gold = map(lambda x: x[0], self.predicatesRankedCosSim)
         nnPredicted = map(lambda x: x[0], self.predicatesRankedNN)
@@ -86,6 +93,25 @@ class Similarity:
         for i in goldIDX:
             nnPredictedIDX.append(gold.index(nnPredicted[i]))
         #evaluate
+        #set up to use rankeval
+        goldRank = [Ranking(goldIDX)]
+        nnRank = [Ranking(nnPredictedIDX)]
+        if rankMetric == "kendallTau":
+            ktScore = kendall_tau_set(nnRank, goldRank)["tau"]
+            self.kendallTau = ktScore
+            return ktScore
+        elif rankMetric == "MRR":   #mean reciprocal rank
+            mrrScore = mrr(nnRank, goldRank)["mrr"]
+            self.MRR = mrrScore
+            return mrrScore
+        elif rankMetric == "NDGC":  #normalized discounted cumulative gain
+            ndgcScore = avg_ndgc_err(nnRank, goldRank)["ndgc"]
+            self.NDGC = ndgcScore
+            return ndgcScore
+        else:   #defaults to MRR
+            mrrScore = mrr(nnRank, goldRank)["mrr"]
+            self.MRR = mrrScore
+            return mrrScore
 
 
 
