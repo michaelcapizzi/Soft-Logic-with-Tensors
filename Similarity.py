@@ -88,7 +88,7 @@ class Similarity:
         self.predicatesRankedNN = sortedPreds
         return sortedPreds
 
-    #TODO figure out how to include rankeval stuff
+
     #evaluate rankings
         #gold = self.predicatesRankedCosSim
         #model = self.predicatesRankedNN
