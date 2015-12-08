@@ -4,6 +4,7 @@ import itertools
 import sys
 rank_eval_dir = "/home/mcapizzi/rankeval-master/src/"
 sys.path.append(rank_eval_dir)
+from sentence.ranking import Ranking
 from evaluation.ranking.set import kendall_tau_set
 from evaluation.ranking.set import mrr
 from evaluation.ranking.set import avg_ndgc_err
