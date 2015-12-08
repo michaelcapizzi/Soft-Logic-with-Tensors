@@ -56,18 +56,21 @@ testNN.initializeParameters(useAutoEncoder=True, existingW1=importedW1, existing
 print("build computational graph")
 testNN.buildComputationGraph()
 
+#####################################################
 
-#initialize variables
-# testNN.initializeVariables()
-testNN.session.run(tf.initialize_all_variables())       #TODO - must done manually --- why?
+if __name__ == "__main__":
+
+    #initialize variables
+    # testNN.initializeVariables()
+    testNN.session.run(tf.initialize_all_variables())       #TODO - must done manually --- why?
 
 
-#run training
-testNN.runTraining(isAutoEncoder=False)
+    #run training
+    testNN.runTraining(isAutoEncoder=False)
 
 
-#save parameters
-testNN.saveVariables("Variables/variables_NN_tanh-loss-decayedLR-10iters.ckpt")
+    #save parameters
+    testNN.saveVariables("Variables/variables_NN_tanh-crossEntropy-decayedLR-10iters")
 
 
 

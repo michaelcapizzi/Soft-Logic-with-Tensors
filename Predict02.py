@@ -36,27 +36,34 @@ testNN.negPredicates = pickle.load(f)
 f.close()
 
 
-#build full dataset
-print("building dataset")
-testNN.buildDataset()
+#build full dataset #TODO remove - not needed for prediction
+# print("building dataset")
+# testNN.buildDataset()
 
 
 #initialize all variables
-testNN.initializeParameters(useAutoEncoder=False)
+# testNN.initializeParameters(useAutoEncoder=False)
+#build empty variables for restoring
+testNN.weights["W1"] = tf.Variable(tf.zeros([testNN.inputDimensions, testNN.hiddenNodes]))
+testNN.weights["W2"] = tf.Variable(tf.zeros([testNN.hiddenNodes, testNN.outputDimensions]))
+testNN.biases["b1"] = tf.Variable(tf.zeros([1, testNN.hiddenNodes]))
+testNN.biases["b2"] = tf.Variable(tf.zeros([1, testNN.outputDimensions]))
+
 
 #then override with saved parameters
 #TODO test to ensure this works
-testNN.loadVariables("Variables/variables_NN_tanh-crossEntropy-decayedLR-10iters")
+# testNN.loadVariables("Variables/variables_NN_tanh-crossEntropy-decayedLR-10itersTEST")
 #otherwise load each separately
+testNN.loadVariables("Variables/variables_NN_tanh-crossEntropy-decayedLR-10iters", variableName="Variable", targetName=testNN.weights["W1"])    #W1 = Variable
+testNN.loadVariables("Variables/variables_NN_tanh-crossEntropy-decayedLR-10iters", variableName="W2", targetName=testNN.weights["W2"])
+testNN.loadVariables("Variables/variables_NN_tanh-crossEntropy-decayedLR-10iters", variableName="Variable_1", targetName=testNN.biases["b1"])    #b1 = Variable_1
+testNN.loadVariables("Variables/variables_NN_tanh-crossEntropy-decayedLR-10iters", variableName="b2", targetName=testNN.biases["b2"])
+
+
 
 #build computational graph
 print("build computational graph")
 testNN.buildComputationGraph()
-
-
-#initialize variables
-# testNN.initializeVariables()
-testNN.session.run(tf.initialize_all_variables())       #TODO - must be done manually --- why?
 
 
 #ready to predict

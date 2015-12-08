@@ -66,7 +66,7 @@ if __name__ == "__main__":
 
 
     #save parameters
-    testNN.saveVariables("Variables/variables_AutoEncoder_tanh-loss-decayedLR-10iters.ckpt")
+    testNN.saveVariables("Variables/variables_AutoEncoder_tanh-loss-decayedLR-10iters")
 
 
 
