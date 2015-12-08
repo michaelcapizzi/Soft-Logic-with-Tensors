@@ -293,14 +293,14 @@ class NeuralNet:
 
     #TODO confirm this is done correctly
     #initialize weights
-    def initializeParameters(self, useAutoEncoder=False, existingW1=None, existingW2=None):
+    def initializeParameters(self, useAutoEncoder=False, existingW1=None):
         if useAutoEncoder:
             #load weights from existing variable
             self.weights["W1"] = existingW1
-            self.weights["W2"] = existingW2
         else:
             self.weights["W1"] = tf.Variable(tf.random_normal([self.inputDimensions, self.hiddenNodes], mean=0, stddev=math.sqrt(float(6) / float(self.inputDimensions + self.outputDimensions + 1))), name="W1")
-            self.weights["W2"] = tf.Variable(tf.random_normal([self.hiddenNodes, self.outputDimensions], mean=0, stddev=math.sqrt(float(6) / float(self.inputDimensions + self.outputDimensions + 1))), name="W2")
+
+        self.weights["W2"] = tf.Variable(tf.random_normal([self.hiddenNodes, self.outputDimensions], mean=0, stddev=math.sqrt(float(6) / float(self.inputDimensions + self.outputDimensions + 1))), name="W2")
 
         self.biases["b1"] = tf.Variable(tf.random_normal([1, self.hiddenNodes], mean=0, stddev=math.sqrt(float(6) / float(self.inputDimensions + self.outputDimensions + 1))), name="b1")
         self.biases["b2"] = tf.Variable(tf.random_normal([1, self.outputDimensions], mean=0, stddev=math.sqrt(float(6) / float(self.inputDimensions + self.outputDimensions + 1))), name="b2")
