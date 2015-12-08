@@ -469,6 +469,13 @@ class NeuralNet:
 
 
 ##########
+
+    #get likelihood of a predicate
+    def getLikelihood(self, predicate):
+        return self.session.run(self.predictOp, feed_dict={self.input: self.getVector(predicate)})
+
+##########
+
     #close session
     def closeSession(self):
         self.session.close()

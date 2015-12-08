@@ -56,8 +56,9 @@ testNN.buildComputationGraph()
 
 #initialize variables
 # testNN.initializeVariables()
-testNN.session.run(tf.initialize_all_variables())       #TODO - must done manually --- why?
+testNN.session.run(tf.initialize_all_variables())       #TODO - must be done manually --- why?
 
 
 #ready to predict
-# testNN.session.run(testNN.predictOp, feed_dict={testNN.input: ???})
+#testNN.getLikelihood(predicate)
+

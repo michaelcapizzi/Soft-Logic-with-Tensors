@@ -64,11 +64,11 @@ testNN.session.run(tf.initialize_all_variables())       #TODO - must done manual
 
 #run training
 testNN.runTraining(isAutoEncoder=False)
-#
-#
-# #save parameters
-# testNN.saveVariables("Variables/variables_NN_tanh-loss-decayedLR-10iters.ckpt")
-#
+
+
+#save parameters
+testNN.saveVariables("Variables/variables_NN_tanh-loss-decayedLR-10iters.ckpt")
+
 
 
 
