@@ -236,17 +236,24 @@ class NeuralNet:
 
 
     #find closest predicate to a given predicate vector
-    def getClosestPredicate(self, predVector, topN):
+        #makeNone = boolean ==> try to make it easier to predict None obj
+    def getClosestPredicate(self, predVector, topN, makeNone):
         # predVector = predVector.reshape((predVector.shape[1],))
         subjVec = predVector[:self.vectorSize]
         verbVec = predVector[self.vectorSize: self.vectorSize * 2]
         objVec = predVector[self.vectorSize * 2:]
         possibleSubjs = self.getClosestWord(subjVec, topN)
         possibleVerbs = self.getClosestWord(verbVec, topN)
-        if np.all(objVec == np.zeros(self.vectorSize)):         #TODO set up other conditions for no object (like sum of all dimensions < small number?)
-            possibleObjs = None
+        if makeNone:
+            if objVec.sum() < (.0000001 * self.vectorSize):         #attempt to approximate None object more effectively
+                possibleObjs = None
+            else:
+                possibleObjs = self.getClosestWord(objVec, topN)
         else:
-            possibleObjs = self.getClosestWord(objVec, topN)
+            if np.all(objVec == np.zeros(self.vectorSize)):
+                possibleObjs = None
+            else:
+                possibleObjs = self.getClosestWord(objVec, topN)
         possible = (possibleSubjs, possibleVerbs, possibleObjs)
         return possible
 
@@ -268,6 +275,12 @@ class NeuralNet:
         saver = tf.train.Saver()
         saver.restore(self.session, fname + ".ckpt")
 
+#########
+
+    def visualizeWeights(self, W1):
+        staticW1 = W1.eval(session=self.session)
+        for i in range(staticW1.shape[1]):
+            return self.getClosestPredicate(staticW1[:,i].reshape((staticW1.shape[0],)), 1, makeNone=False)
 
 ##############################################################################
 #variable setup
@@ -436,10 +449,10 @@ class NeuralNet:
                 diff = avgCost - newCost
                 avgCost = newCost
                 #debugging
-                if i % 100 == 0:
+                if i % 500 == 0:
                     print("predicate in: ", pred)
                     if isAutoEncoder:
-                        print("predicate out: ", self.getClosestPredicate(self.session.run(self.ffOp, feed_dict={self.input: vector}).reshape((600,)),topN))
+                        print("predicate out: ", self.getClosestPredicate(self.session.run(self.ffOp, feed_dict={self.input: vector}).reshape((600,)),topN, True))
                     else:
                         print("label out: ", self.session.run(self.predictOp, feed_dict={self.input: vector}))
                     print("iteration %s, training instance %s: with average cost of %s and diff of %s" %(str(epoch+1), str(i + 1), str(avgCost), str(diff)))

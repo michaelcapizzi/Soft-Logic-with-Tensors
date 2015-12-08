@@ -4,14 +4,8 @@ import pickle
 import Embedding as e
 import NeuralNet as nn
 import tensorflow as tf
-#test run of the whole process
 
-
-#import predicates
-# fPreds = open("Predicates/ALL-predicates-31994.pickle", "rb")
-# preds = pickle.load(fPreds)
-# fPreds.close()
-
+#build an autoencoder whose weights will be used to initialize neural network
 
 #create Embedding class
 w2v = e.Embedding()
@@ -24,11 +18,12 @@ print ("finished loading word2vec")
 #create NN class
     #autoencoder
     #300 hidden nodes
-    #1000 training epochs
-    #RELU activation
-# testNN = nn.NeuralNet(embeddingClass=w2v, vectorSize=w2v.getVectorSize(),hiddenNodes=300, outputNodes=3 * w2v.getVectorSize(), trainingEpochs=2, activationFunction="relu")
-# testNN = nn.NeuralNet(embeddingClass=w2v, vectorSize=w2v.getVectorSize(),hiddenNodes=300, outputNodes=3 * w2v.getVectorSize(), trainingEpochs=2, activationFunction="tanh", costFunction="RMSE")
+    #10 training epochs
+    #tanh activation
+    #least squares loss
+    #decayed learning rate
 testNN = nn.NeuralNet(embeddingClass=w2v, vectorSize=w2v.getVectorSize(),hiddenNodes=300, outputNodes=3 * w2v.getVectorSize(), trainingEpochs=10, activationFunction="tanh", costFunction="RMSE", learningRate=None)
+
 
 #loading true predicates
 # f = open("Predicates/ALL-predicates-31994.pickle", "rb")
@@ -57,12 +52,23 @@ testNN.initializeParameters(useAutoEncoder=False)
 print("build computational graph")
 testNN.buildComputationGraph()
 
-#initialize variables
-# testNN.initializeVariables()
-testNN.session.run(tf.initialize_all_variables())       #TODO - must done manually --- why?
+#####################################################
 
-#run training
-# testNN.runTraining(isAutoEncoder=True))
+if __name__ == "__main__":
+
+    #initialize variables
+    # testNN.initializeVariables()
+    testNN.session.run(tf.initialize_all_variables())       #TODO - must done manually --- why?
+
+
+    #run training
+    testNN.runTraining(isAutoEncoder=True)
+
+
+    #save parameters
+    testNN.saveVariables("Variables/variables_AutoEncoder_tanh-loss-decayedLR-10iters.ckpt")
+
+
 
 
 
