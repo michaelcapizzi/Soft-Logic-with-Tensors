@@ -41,22 +41,25 @@ f.close()
 print("building dataset")
 testNN.buildDataset()
 
-#load parameters
+#build empty variables for restoring
+importedW1 = tf.Variable(tf.zeros([testNN.inputDimensions, testNN.hiddenNodes]))
+importedb1 = tf.Variable(tf.zeros([1, testNN.hiddenNodes]))
 
-#
-# #initialize parameters
-# print("initializing parameters -- randomly")
-# testNN.initializeParameters(useAutoEncoder=True)
-#
-#
-# #build computational graph
-# print("build computational graph")
-# testNN.buildComputationGraph()
-#
-#
-# #initialize variables
-# # testNN.initializeVariables()
-# testNN.session.run(tf.initialize_all_variables())       #TODO - must done manually --- why?
+#load variables into empties
+testNN.loadVariables("Variables/variables_AutoEncoder_tanh-loss-decayedLR-10iters", variableName="W1", targetName=importedW1)
+testNN.loadVariables("Variables/variables_AutoEncoder_tanh-loss-decayedLR-10iters", variableName="b1", targetName=importedb1)
+
+#create all parameters for NN (including initializing W1 and b1 from Autoencoder)
+testNN.initializeParameters(useAutoEncoder=True, existingW1=importedW1, existingB1=importedb1)
+
+#build computational graph
+print("build computational graph")
+testNN.buildComputationGraph()
+
+
+#initialize variables
+# testNN.initializeVariables()
+testNN.session.run(tf.initialize_all_variables())       #TODO - must done manually --- why?
 #
 #
 # #run training

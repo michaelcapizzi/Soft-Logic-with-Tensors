@@ -120,8 +120,8 @@ class NeuralNet:
 
     # #build allPredicates plus labels
     def buildDataset(self):
-        labeledPos = [(pp, 1) for pp in self.predicates]
-        labeledNeg = [(pn, 1) for pn in self.negPredicates]
+        labeledPos = [(pp, np.array([[1,0]])) for pp in self.predicates]
+        labeledNeg = [(pn, np.array([[0,1]])) for pn in self.negPredicates]
         allPreds = labeledPos + labeledNeg
         random.shuffle(allPreds)
         self.allPredicates = map(lambda x: x[0], allPreds)
@@ -473,6 +473,8 @@ class NeuralNet:
     def closeSession(self):
         self.session.close()
 
+#####################################################
+#####################################################
 #####################################################
 
 #more utils
