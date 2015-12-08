@@ -270,11 +270,16 @@ class NeuralNet:
         saver.save(self.session, fname + ".ckpt")
 
 
-    #load variables -- loads all variables from saved
-    def loadVariables(self, fname):
-        saver = tf.train.Saver()
-        saver.restore(self.session, fname + ".ckpt")
-
+    #load variable
+        #  if variableName is None loads all variables from saved
+        #  note: all variables to be loaded must be built with zeros first!
+    def loadVariables(self, fname, variableName=None, targetName=None):
+        if variableName is None:
+            saver = tf.train.Saver()
+            saver.restore(self.session, fname + ".ckpt")
+        else:
+            saver = tf.train.Saver({variableName:targetName})
+            saver.restore(self.session, fname + ".ckpt")
 #########
 
     def visualizeWeights(self, W1):
