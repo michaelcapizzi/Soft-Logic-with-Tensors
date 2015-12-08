@@ -680,3 +680,28 @@ learned weights from training NN
     ('predicate in: ', ('river', 'help', 'asbestos'))
     ('label out: ', array([[ 0.00237923,  0.99762076]], dtype=float32))
 
+sample predictions made by nn
+---------------------------------
+    
+    >>> n.testNN.session.run(n.testNN.predictOp, feed_dict={n.testNN.input: n.testNN.getVector(("ducks", "fly", None))})
+    array([[ 0.36089328,  0.63910669]], dtype=float32)
+    >>> n.testNN.session.run(n.testNN.predictOp, feed_dict={n.testNN.input: n.testNN.getVector(("birds", "fly", None))})
+    array([[ 0.90842175,  0.09157821]], dtype=float32)
+    >>> n.testNN.session.run(n.testNN.predictOp, feed_dict={n.testNN.input: n.testNN.getVector(("ducks", "swim", None))})
+    array([[ 0.12413885,  0.87586111]], dtype=float32)
+    >>> n.testNN.session.run(n.testNN.predictOp, feed_dict={n.testNN.input: n.testNN.getVector(("duck", "swim", None))})
+    array([[ 0.01832776,  0.98167223]], dtype=float32)
+    >>> n.testNN.session.run(n.testNN.predictOp, feed_dict={n.testNN.input: n.testNN.getVector(("duck", "fly", None))})
+    array([[ 0.10206932,  0.89793062]], dtype=float32)
+    >>> n.testNN.session.run(n.testNN.predictOp, feed_dict={n.testNN.input: n.testNN.getVector(("tigers", "fly", None))})
+    array([[ 0.09806886,  0.90193111]], dtype=float32)
+    >>> n.testNN.session.run(n.testNN.predictOp, feed_dict={n.testNN.input: n.testNN.getVector(("tiger", "fly", None))})
+    array([[ 0.12796322,  0.87203681]], dtype=float32)
+    >>> n.testNN.session.run(n.testNN.predictOp, feed_dict={n.testNN.input: n.testNN.getVector(("tiger", "flies", None))})
+    array([[ 0.02750574,  0.97249424]], dtype=float32)
+    >>> n.testNN.session.run(n.testNN.predictOp, feed_dict={n.testNN.input: n.testNN.getVector(("duck", "is_bird", None))})
+    array([[ 0.80134314,  0.19865689]], dtype=float32)
+    >>> n.testNN.session.run(n.testNN.predictOp, feed_dict={n.testNN.input: n.testNN.getVector(("duck", "is_mammal", None))})
+    array([[ 0.59040338,  0.40959659]], dtype=float32)
+    >>> n.testNN.session.run(n.testNN.predictOp, feed_dict={n.testNN.input: n.testNN.getVector(("tiger", "is_mammal", None))})
+    array([[ 0.59109175,  0.40890825]], dtype=float32)
