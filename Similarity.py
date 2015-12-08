@@ -1,6 +1,9 @@
 __author__ = 'mcapizzi'
 
 import itertools
+import sys
+rank_eval_dir = "/home/mcapizzi/rankeval-master/src/"
+sys.path.append(rank_eval_dir)
 
 class Similarity:
     """
@@ -58,7 +61,7 @@ class Similarity:
         return sortedPreds
 
 
-    #rank predicates by truth value of NN output
+    #ranks predicates by truth value of NN output
     def rankClosestPredicatesNN(self):
         preds = []
         for p in map(lambda x: x[0], self.predicatesRankedCosSim):
@@ -69,6 +72,21 @@ class Similarity:
         sortedPreds = list(reversed(sorted(preds, key=lambda x: x[1])))
         self.predicatesRankedNN = sortedPreds
         return sortedPreds
+
+
+    #evaluate rankings
+        #gold = self.predicatesRankedCosSim
+        #model = self.predicatesRankedNN
+    def evaluateRanks(self):
+        #convert each rank to indices
+        gold = map(lambda x: x[0], self.predicatesRankedCosSim)
+        nnPredicted = map(lambda x: x[0], self.predicatesRankedNN)
+        goldIDX = list(range(len(gold)))
+        nnPredictedIDX = []
+        for i in goldIDX:
+            nnPredictedIDX.append(gold.index(nnPredicted[i]))
+        #evaluate
+
 
 
 
