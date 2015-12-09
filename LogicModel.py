@@ -6,10 +6,13 @@ import itertools
 #TODO update with outer product (see Grefenstette)
 
 class LogicModel:
+    """
+    creates a model that utilizes tensor-based application of first-order logic
+    :param listOfElements = ["john", "chris", "tom"]
+    :param dictionaryOfUnaryPredicates = {"is_mathematician": ["john", "chris"]}
+    :param dictionaryOfBinaryPredicates = {"loves": [("john", "john"), ("chris", "john)]}
+    """
 
-        #listOfElements = ["john", "chris", "tom"]
-        #dictionaryOfUnaryPredicates = {"is_mathematician": ["john", "chris"]}
-        #dictionaryOfBinaryPredicates = {"loves": [("john", "john"), ("chris", "john)]}
     def __init__(self, listOfElements, dictionaryOfUnaryPredicates = {}, dictionaryOfBinaryPredicates = {}):
         #domain
         self.elements = listOfElements
@@ -171,22 +174,21 @@ class LogicModel:
 
     #add an element to predicate matrix
         #prob = probability that element IS predicate
-    def updateUnaryPredicate(self, element, predicate, prob = 1):
+    def updateUnaryPredicate(self, element, predicate, prob=1):
         if prob == 0:
             self.removeUnaryPredicate(element, predicate)
         else:
             self.unaryPredicateMatrices[predicate][:,self.elementLookUp[element]] = np.array([prob, 1 - prob])
 
 
-    #TODO test
     #add an element to predicate tensor
         #prob = probability that element IS predicate
-    def updateBinaryPredicate(self, pair, predicate, prob = 1):
+    def updateBinaryPredicate(self, pair, predicate, prob=1):
         if prob == 0:
             self.removeBinaryPredicate(pair, predicate)
         else:
-            self.binaryPredicateTensors[0][self.elementLookUp[pair[1]]][self.elementLookUp[pair[0]]] = prob
-            self.binaryPredicateTensors[1][self.elementLookUp[pair[1]]][self.elementLookUp[pair[0]]] = 1 - prob
+            self.binaryPredicateTensors[predicate][0][self.elementLookUp[pair[1]]][self.elementLookUp[pair[0]]] = prob
+            self.binaryPredicateTensors[predicate][1][self.elementLookUp[pair[1]]][self.elementLookUp[pair[0]]] = 1 - prob
 
 
 
