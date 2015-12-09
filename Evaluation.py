@@ -29,7 +29,7 @@ class Evaluation:
                                     )
         self.parameterFile = "Variables/variables_NN_" + str(hiddenNodes) + "-" + activationFunction + "-crossEntropy-decayedLR-10iters"
         #similarity classes
-        self.similarityClasses = None
+        self.similarityClasses = []
 
 
     def buildNN(self):
@@ -53,6 +53,7 @@ class Evaluation:
     def getSimilarityRankings(self, topN, rankMetric):
         for pred in self.predicates:
             #create similarity class
+            print(pred)
             sim = s.Similarity(pred, self.nnClass)
             #run ranking evaluation
             sim.runAll(topN, rankMetric)

@@ -137,8 +137,8 @@ class Similarity:
             nnPredicteds.append(nnPredictedIDX)
         #evaluate
         #set up to use rankeval
-        goldRanks = [Ranking(g) for g in golds]
-        nnRanks = [Ranking(n) for n in nnPredicteds]
+        goldRanks = [Ranking(g) for g in golds if g]
+        nnRanks = [Ranking(n) for n in nnPredicteds if n]
         #list to hold final scores
         ranks = []
         for k in range(len(goldRanks)):
