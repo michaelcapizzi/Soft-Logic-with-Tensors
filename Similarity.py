@@ -167,35 +167,13 @@ class Similarity:
             self.MRR = ranks
             return ranks
 
-            # for j in range(len(self.predicatesRankedCosSim)):
-        #     #convert each rank to indices
-        #     gold = map(lambda x: x[0], self.predicatesRankedCosSim[j])
-        #     nnPredicted = map(lambda x: x[0], self.predicatesRankedNN[j])
-        #     goldIDX = list(range(len(gold)))
-        #     nnPredictedIDX = []
-        #     for i in goldIDX:
-        #         nnPredictedIDX.append(gold.index(nnPredicted[i]))
-        #     #evaluate
-        #     #set up to use rankeval
-        #     goldRank = [Ranking(goldIDX)]
-        #     nnRank = [Ranking(nnPredictedIDX)]
-        #     if rankMetric == "kendallTau":
-        #         ktScore = kendall_tau_set(nnRank, goldRank)["tau"]
-        #         self.kendallTau = ktScore
-        #         return ktScore
-        #     elif rankMetric == "MRR":   #mean reciprocal rank
-        #         mrrScore = mrr(nnRank, goldRank)["mrr"]
-        #         self.MRR = mrrScore
-        #         return mrrScore
-        #     elif rankMetric == "NDGC":  #normalized discounted cumulative gain
-        #         ndgcScore = avg_ndgc_err(nnRank, goldRank)["ndgc"]
-        #         self.NDGC = ndgcScore
-        #         return ndgcScore
-        #     else:   #defaults to MRR
-        #         mrrScore = mrr(nnRank, goldRank)["mrr"]
-        #         self.MRR = mrrScore
-        #         return mrrScore
 
+    def runAll(self, topN, rankMetric):
+        self.getClosestPredicates(topN)
+        self.rankClosestPredicatesCosSim()
+        self.rankClosestPredicatesNN()
+        ranks = self.evaluateRanks(rankMetric)
+        return ranks
 
 
 

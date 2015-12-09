@@ -20,7 +20,7 @@ print ("finished loading word2vec")
 #10 training epochs
 #tanh activation
 #cross_entropy loss
-testNN = nn.NeuralNet(embeddingClass=w2v, vectorSize=w2v.getVectorSize(),hiddenNodes=300, outputNodes=2, trainingEpochs=10, activationFunction="tanh", costFunction="crossEntropy", learningRate=None)
+testNN = nn.NeuralNet(embeddingClass=w2v, vectorSize=w2v.getVectorSize(),hiddenNodes=300, outputNodes=2, trainingEpochs=10, activationFunction="relu", costFunction="crossEntropy", learningRate=None)
 
 
 #loading true predicates

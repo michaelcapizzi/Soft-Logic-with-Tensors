@@ -28,7 +28,7 @@ print("cleaning dependencies")
 preds = depClass.extractPredicates("SENNA", [depClass.sennaRawDependencies])
 
 print("pickling")
-f = open("Predicates/gigaPreds-" + sys.argv[1] + ".pickle")
+f = open("Predicates/gigaPreds-" + sys.argv[1] + ".pickle", "wb")
 pickle.dump(preds, f)
 f.close()
 
