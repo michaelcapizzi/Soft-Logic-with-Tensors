@@ -43,6 +43,8 @@ class Similarity:
 
 
     # makes Cartesian product of all closestPredicates and then sorts by cosine similarity
+        #returns three lists of sorted predicates
+            #third list is [] for object None original
     def rankClosestPredicatesCosSim(self):
         #get cartesian product of all combinations
         if self.closestPredicates[2] is None:        #if no object
@@ -54,72 +56,145 @@ class Similarity:
             cartesianProd = list(itertools.product(*self.closestPredicates))
 
         #extract the original predicate - the one with highest mean of cosSims - the first
-        # original = cartesianProd[0]
+        original = cartesianProd[0]
         #remove original from cartesian product list
         del cartesianProd[0]
 
-        #create (tuple, mean cosSim)
-        if None in map(lambda x: x[2], cartesianProd):
-            cartesianProdCondensed = [(tuple(map(lambda x: x[0], y[0:2])), sum(map(lambda x: x[1], y[0:2])) / float(2)) for y in cartesianProd]
-        else:
-            cartesianProdCondensed = [(tuple(map(lambda x: x[0], y)), sum(map(lambda x: x[1], y)) / float(3)) for y in cartesianProd]
+        #partition cart prod into three lists
+        partitions = \
+        [
+            #(-, [1], [2])
+            list(itertools.ifilter(lambda x: x[1] == original[1] and x[2] == original[2], cartesianProd)),
+            #([0], -, [2])
+            list(itertools.ifilter(lambda x: x[0] == original[0] and x[2] == original[2], cartesianProd)),
+            #([0], [1], -)  #will be [] for None objects
+            list(itertools.ifilter(lambda x: x[0] == original[0] and x[1] == original[1], cartesianProd)),
+        ]
 
-        #return sorted list
-        sortedPreds = list(reversed(sorted(cartesianProdCondensed, key=lambda x: x[1])))
-        #add None back in
-        sortedPredsPlusNone = []
-        for p in sortedPreds:
-            if len(p[0]) == 2:
-                pNone = (p[0][0], p[0][1], None)
-            sortedPredsPlusNone.append((pNone, p[1]))
-        self.predicatesRankedCosSim = sortedPredsPlusNone
-        return sortedPredsPlusNone
+        #sort each partition by the cosSim to original
+        partitionsSorted = \
+        [
+            #(-, [1], [2])
+            list(reversed(sorted(partitions[0], key=lambda x: x[0][1]))),
+            #([0], -, [2])
+            list(reversed(sorted(partitions[1], key=lambda x: x[1][1]))),
+            #([0], [1], -)  #will be [] for None objects
+            list(reversed(sorted(partitions[2], key=lambda x: x[2][1])))
+        ]
+
+        self.predicatesRankedCosSim = partitionsSorted
+        return partitionsSorted
+
 
 
     #ranks predicates by truth value of NN output
     def rankClosestPredicatesNN(self):
-        preds = []
-        for p in map(lambda x: x[0], self.predicatesRankedCosSim):
-            if len(p) == 2:
-                p = (p[0], p[1], None)
-            likelihood = self.nnClass.getLikelihood(p)
-            preds.append((p, likelihood[0][0]))
-        sortedPreds = list(reversed(sorted(preds, key=lambda x: x[1])))
-        self.predicatesRankedNN = sortedPreds
-        return sortedPreds
+        allPreds = []
+        for part in self.predicatesRankedCosSim:
+            partPreds = []
+            for pred in part:
+                #filter out the cosSim scores
+                if pred[2] is None:         #how to handle mapping None
+                    predNone = pred[0:2]
+                    justPredNone = tuple(map(lambda x: x[0], predNone))
+                    justPred = (justPredNone[0], justPredNone[1], None)
+                else:
+                    justPred = tuple(map(lambda x: x[0], pred))
+                #get likelihood of predicate in NN model
+                likelihood = self.nnClass.getLikelihood(justPred)
+                #append to list with ORIGINAL pred (including cosSim ==> to match other ranked list)
+                partPreds.append((pred, likelihood[0][0]))
+                # partPreds.append(pred)
+            #sort
+            sortedPreds = list(reversed(sorted(partPreds, key=lambda x: x[1])))
+            allPreds.append(sortedPreds)
 
+        self.predicatesRankedNN = allPreds
+        return allPreds
 
     #evaluate rankings
         #gold = self.predicatesRankedCosSim
         #model = self.predicatesRankedNN
     def evaluateRanks(self, rankMetric):
-        #convert each rank to indices
-        gold = map(lambda x: x[0], self.predicatesRankedCosSim)
-        nnPredicted = map(lambda x: x[0], self.predicatesRankedNN)
-        goldIDX = list(range(len(gold)))
-        nnPredictedIDX = []
-        for i in goldIDX:
-            nnPredictedIDX.append(gold.index(nnPredicted[i]))
+        #generate indexed lists
+        golds = []
+        nnPredicteds = []
+        for j in range(len(self.predicatesRankedCosSim)):
+            #convert each rank to indices
+            # if not self.predicatesRankedCosSim[2]:
+            #     gold = map(lambda x: x[0], self.predicatesRankedCosSim[j][0:2])
+            # else:
+            gold = self.predicatesRankedCosSim[j]
+            # if not self.predicatesRankedNN[2]:
+            #     nnPredicted = map(lambda x: x[0][0], self.predicatesRankedNN[j][0:2])
+            # else:
+            nnPredicted = map(lambda x: x[0], self.predicatesRankedNN[j])
+            goldIDX = list(range(len(gold)))
+            nnPredictedIDX = []
+            for i in goldIDX:
+                nnPredictedIDX.append(gold.index(nnPredicted[i]))
+            golds.append(goldIDX)
+            nnPredicteds.append(nnPredictedIDX)
         #evaluate
         #set up to use rankeval
-        goldRank = [Ranking(goldIDX)]
-        nnRank = [Ranking(nnPredictedIDX)]
+        goldRanks = [Ranking(g) for g in golds]
+        nnRanks = [Ranking(n) for n in nnPredicteds]
+        #list to hold final scores
+        ranks = []
+        for k in range(len(goldRanks)):
+            if rankMetric == "kendallTau":
+                ktScore = kendall_tau_set([nnRanks[k]], [goldRanks[k]])["tau"]
+                ranks.append(ktScore)
+            elif rankMetric == "MRR":   #mean reciprocal rank
+                mrrScore = mrr([nnRanks[k]], [goldRanks[k]])["mrr"]
+                ranks.append(mrrScore)
+            elif rankMetric == "NDGC":  #normalized discounted cumulative gain
+                ndgcScore = avg_ndgc_err([nnRanks[k]], [goldRanks[k]])["ndgc"]
+                ranks.append(ndgcScore)
+            else:   #defaults to MRR
+                mrrScore = mrr([nnRanks[k]], [goldRanks[k]])["mrr"]
+                ranks.append(mrrScore)
         if rankMetric == "kendallTau":
-            ktScore = kendall_tau_set(nnRank, goldRank)["tau"]
-            self.kendallTau = ktScore
-            return ktScore
-        elif rankMetric == "MRR":   #mean reciprocal rank
-            mrrScore = mrr(nnRank, goldRank)["mrr"]
-            self.MRR = mrrScore
-            return mrrScore
-        elif rankMetric == "NDGC":  #normalized discounted cumulative gain
-            ndgcScore = avg_ndgc_err(nnRank, goldRank)["ndgc"]
-            self.NDGC = ndgcScore
-            return ndgcScore
-        else:   #defaults to MRR
-            mrrScore = mrr(nnRank, goldRank)["mrr"]
-            self.MRR = mrrScore
-            return mrrScore
+            self.kendallTau = ranks
+            return ranks
+        elif rankMetric == "MRR":
+            self.MRR = ranks
+            return ranks
+        elif rankMetric == "NDGC":
+            self.NDGC = ranks
+            return ranks
+        else:
+            self.MRR = ranks
+            return ranks
+
+            # for j in range(len(self.predicatesRankedCosSim)):
+        #     #convert each rank to indices
+        #     gold = map(lambda x: x[0], self.predicatesRankedCosSim[j])
+        #     nnPredicted = map(lambda x: x[0], self.predicatesRankedNN[j])
+        #     goldIDX = list(range(len(gold)))
+        #     nnPredictedIDX = []
+        #     for i in goldIDX:
+        #         nnPredictedIDX.append(gold.index(nnPredicted[i]))
+        #     #evaluate
+        #     #set up to use rankeval
+        #     goldRank = [Ranking(goldIDX)]
+        #     nnRank = [Ranking(nnPredictedIDX)]
+        #     if rankMetric == "kendallTau":
+        #         ktScore = kendall_tau_set(nnRank, goldRank)["tau"]
+        #         self.kendallTau = ktScore
+        #         return ktScore
+        #     elif rankMetric == "MRR":   #mean reciprocal rank
+        #         mrrScore = mrr(nnRank, goldRank)["mrr"]
+        #         self.MRR = mrrScore
+        #         return mrrScore
+        #     elif rankMetric == "NDGC":  #normalized discounted cumulative gain
+        #         ndgcScore = avg_ndgc_err(nnRank, goldRank)["ndgc"]
+        #         self.NDGC = ndgcScore
+        #         return ndgcScore
+        #     else:   #defaults to MRR
+        #         mrrScore = mrr(nnRank, goldRank)["mrr"]
+        #         self.MRR = mrrScore
+        #         return mrrScore
 
 
 
