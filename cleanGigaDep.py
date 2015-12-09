@@ -15,7 +15,7 @@ for line in f:
     s = line.split("__")
     print(s)
     #add to raw depdency data structure
-    depClass.sennaRawDependencies.append((s[2], s[1], s[0]))
+    depClass.sennaRawDependencies.append((s[2], s[1], s[0].rstrip()))
 
 f.close()
 
