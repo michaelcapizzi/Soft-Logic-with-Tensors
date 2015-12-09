@@ -51,7 +51,6 @@ testNN.biases["b2"] = tf.Variable(tf.zeros([1, testNN.outputDimensions]))
 
 
 #then override with saved parameters
-#TODO test to ensure this works
 # testNN.loadVariables("Variables/variables_NN_tanh-crossEntropy-decayedLR-10itersTEST")
 #otherwise load each separately
 testNN.loadVariables("Variables/variables_NN_tanh-crossEntropy-decayedLR-10iters", variableName="Variable", targetName=testNN.weights["W1"])    #W1 = Variable
