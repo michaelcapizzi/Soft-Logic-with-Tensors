@@ -13,7 +13,7 @@ depClass = d.Dependencies([])
 for line in f:
     #clean the dependency
     s = line.split("__")
-    if len(line) != 3:
+    if len(s) != 3:
         break
     else:
         print(s)
