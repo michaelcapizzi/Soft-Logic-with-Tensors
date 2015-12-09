@@ -46,8 +46,8 @@ importedW1 = tf.Variable(tf.zeros([testNN.inputDimensions, testNN.hiddenNodes]))
 importedb1 = tf.Variable(tf.zeros([1, testNN.hiddenNodes]))
 
 #load variables into empties
-testNN.loadVariables("Variables/variables_AutoEncoder_tanh-loss-decayedLR-10iters", variableName="W1", targetName=importedW1)
-testNN.loadVariables("Variables/variables_AutoEncoder_tanh-loss-decayedLR-10iters", variableName="b1", targetName=importedb1)
+testNN.loadVariables("Variables/variables_AutoEncoder_relu-loss-decayedLR-10iters", variableName="W1", targetName=importedW1)
+testNN.loadVariables("Variables/variables_AutoEncoder_relu-loss-decayedLR-10iters", variableName="b1", targetName=importedb1)
 
 #create all parameters for NN (including initializing W1 and b1 from Autoencoder)
 testNN.initializeParameters(useAutoEncoder=True, existingW1=importedW1, existingB1=importedb1)
@@ -70,7 +70,7 @@ if __name__ == "__main__":
 
 
     #save parameters
-    testNN.saveVariables("Variables/variables_NN_tanh-crossEntropy-decayedLR-10iters")
+    testNN.saveVariables("Variables/variables_NN_relu-crossEntropy-decayedLR-10iters")
 
 
 

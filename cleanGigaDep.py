@@ -4,7 +4,8 @@ import sys
 import Dependencies as d
 import pickle
 
-f = open(sys.argv[1])
+# f = open(sys.argv[1])
+f = open("/work/mcapizzi/test.txtaa")
 
 #initiate an empty dependency class
 depClass = d.Dependencies([])
@@ -22,13 +23,13 @@ for line in f:
 
 f.close()
 
-print("cleaning dependencies")
-#extract the necessary ones
-depClass.sennaCleanDependencies = depClass.extractPredicates("SENNA", depClass.sennaRawDependencies)
-
-print("pickling")
-f = open("Predicates/gigaPreds-" + sys.argv[1] + ".pickle")
-pickle.dump(depClass.sennaRawDependencies, f)
-f.close()
-
-print("finished")
+# print("cleaning dependencies")
+# #extract the necessary ones
+# preds = depClass.extractPredicates("SENNA", depClass.sennaRawDependencies)
+#
+# print("pickling")
+# f = open("Predicates/gigaPreds-" + sys.argv[1] + ".pickle")
+# pickle.dump(preds, f)
+# f.close()
+#
+# print("finished")
