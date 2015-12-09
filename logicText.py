@@ -1,4 +1,4 @@
-import Model as m
+import LogicModel as m
 
 ##############domain 1####################
 
@@ -15,13 +15,13 @@ domain1BiPreds = {"hates": [("tom", "chris"), ("tom", "john"), ("chris", "chris"
 
 #elements in domain
 # domain2El = ["mary", "john"]
-domain2El = ["john", "mary"]
+domain2El = ["john", "mary", "bill"]
 
 #binary predicates
 domain2BiPreds = {"loves": [("mary", "john"), ("john", "john"), ("mary", "mary")]}
 
 ############################################
 
-mod1 = m.Model(domain1El, domain1UnPreds, domain1BiPreds)
+mod1 = m.LogicModel(domain1El, domain1UnPreds, domain1BiPreds)
 
-mod2 = m.Model(domain2El, dictionaryOfBinaryPredicates=domain2BiPreds)
+mod2 = m.LogicModel(domain2El, dictionaryOfBinaryPredicates=domain2BiPreds)

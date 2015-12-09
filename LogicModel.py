@@ -1,8 +1,8 @@
 import numpy as np
 import itertools
 
-#class for a model
-#TODO allow for uncertainty in calculations (i.e., not 1,0 and 0,1 for truth)
+#class for a logic model
+#TODO allow for loading predicates with uncertainty in calculations (i.e., not 1,0 and 0,1 for truth)
 #TODO update with outer product (see Grefenstette)
 
 class LogicModel:
@@ -26,24 +26,24 @@ class LogicModel:
         self.binaryPredicateLookUp = dictionaryOfBinaryPredicates
         self.binaryPredicateTensors = {}
         #truth conditions
-        self.isTrue = np.array([1, 0]).reshape((2,1))
-        self.isFalse = np.array([0, 1]).reshape((2,1))
+        self.isTrue = np.array([1., 0.]).reshape((2,1))
+        self.isFalse = np.array([0., 1.]).reshape((2,1))
         #connectives
         self.negConnect = np.array([
-                                [0,1],
-                                [1,0]
+                                [0.,1.],
+                                [1.,0.]
                             ])
         self.orConnect = np.array([                         #first row is first rank from left to right, top to bottom
-                                    [1,1,0,0],
-                                    [1,0,0,1]
+                                    [1.,1.,0.,0.],
+                                    [1.,0.,0.,1.]
                                 ]).reshape((2,2,2))
         self.andConnect = np.array([
-                                    [1,0,0,1],              #first row is first rank from left to right, top to bottom
-                                    [0,0,1,1]
+                                    [1.,0.,0.,1.],              #first row is first rank from left to right, top to bottom
+                                    [0.,0.,1.,1.]
                                 ]).reshape((2,2,2))
         self.conditionalConnect = np.array([                #first row is first rank from left to right, top to bottom
-                                            [1,0,0,1],
-                                            [1,1,0,0]
+                                            [1.,0.,0.,1.],
+                                            [1.,1.,0.,0.]
                                         ]).reshape((2,2,2))
 
 ######################################################
@@ -234,14 +234,47 @@ class LogicModel:
 ######################################################
 
 #determining truth
+    def unaryOp(self, predicate, element):
+        return np.tensordot (
+                                self.getUnaryPredicate(predicate),
+                                self.getOneHot(element),
+                            axes=1)
 
-    #TODO figure out how to build one method for all possible
-    def calculateTruthValue(self, elem1, elem2):
-        return np.tensordot(elem1, elem2, axes=1)
-        # predicate ==> (self.getUnaryPredicate(elem1), self.getOneHot(elem2))
-        # negation ==> (self.neg, self.isTrue / self.isFalse)
-        #TODO figure out other connectives
+    def binaryOp(self, predicate, subjElement, objElement):
+        return np.tensordot (
+                                np.tensordot    (
+                                                    self.getBinaryPredicate(predicate),
+                                                    self.getOneHot(subjElement),
+                                                axes=1).reshape((2, len(self.elementLookUp.keys()))),      #reshape to 2,sizeOfDomain
+                                self.getOneHot(objElement),
+                            axes=1)
 
+    def negOp(self, truthValue):
+        return np.tensordot (
+                                self.negConnect,
+                                truthValue,
+                            axes=1).reshape((2,1))
+
+    def andOp(self, truthValue1, truthValue2):
+        return np.tensordot (
+                                np.tensordot    (
+                                                    self.andConnect,
+                                                    truthValue1,
+                                                axes=1).reshape((2,2)).T,
+                                truthValue2,
+                                axes=1)
+
+    def orOp(self, truthValue1, truthValue2):
+        return np.tensordot (
+            np.tensordot    (
+                self.andConnect,
+                truthValue1,
+                axes=1).reshape((2,2)).T,
+            truthValue2,
+            axes=1)
+
+    #TODO test and build conditionalOp
+    # def conditionalOp:
 
 ##############################################################
 
@@ -256,4 +289,5 @@ class LogicModel:
 #np.tensordot(np.tensordot(mod.andConnect, mod.isTrue, axes=1).reshape((2,2)).T, mod.isFalse, axes=1)
 
 #binary
-#np.tensordot(np.tensordot(lovesManual, mod2.getOneHot("mary"),axes=1).reshape((2,3)), mod2.getOneHot("john"),axes=1)
+#np.tensordot(np.tensordot(lovesManual, mod2.getOneHot("mary"),axes=1).reshape((2,2)), mod2.getOneHot("john"),axes=1)
+    #reshape(2, [# of elements in domain])
