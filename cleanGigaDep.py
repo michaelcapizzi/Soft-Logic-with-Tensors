@@ -13,13 +13,13 @@ depClass = d.Dependencies([])
 #for each line
 for line in f:
     #clean the dependency
-    s = line.split("__")
+    s = line.rstrip().split("__")
     if len(s) != 3:
         break
     else:
         print(s)
         #add to raw depdency data structure
-        depClass.sennaRawDependencies.append((s[2], s[1], s[0].rstrip()))
+        depClass.sennaRawDependencies.append((s[2], s[1], s[0]))
 
 f.close()
 
