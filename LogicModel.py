@@ -262,19 +262,26 @@ class LogicModel:
                                                     truthValue1,
                                                 axes=1).reshape((2,2)).T,
                                 truthValue2,
-                                axes=1)
+                            axes=1)
 
     def orOp(self, truthValue1, truthValue2):
         return np.tensordot (
-            np.tensordot    (
-                self.andConnect,
-                truthValue1,
-                axes=1).reshape((2,2)).T,
-            truthValue2,
-            axes=1)
+                                np.tensordot    (
+                                                    self.orConnect,
+                                                    truthValue1,
+                                                axes=1).reshape((2,2)).T,
+                                truthValue2,
+                            axes=1)
 
-    #TODO test and build conditionalOp
-    # def conditionalOp:
+    def conditionalOp(self, truthValue1, truthValue2):
+        return np.tensordot (
+                                np.tensordot    (
+                                                    self.conditionalConnect,
+                                                    truthValue2,                #the consequent
+                                                axes=1).reshape((2,2)).T,
+                                truthValue1,                                    #the antecedent
+                            axes=1)
+
 
 ##############################################################
 
