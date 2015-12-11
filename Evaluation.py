@@ -60,3 +60,4 @@ class Evaluation:
             #store similarity class
             self.similarityClasses.append(sim)
 
+    #TODO build averaging method
