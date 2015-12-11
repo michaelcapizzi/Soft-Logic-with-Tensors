@@ -485,25 +485,28 @@ class NeuralNet:
 #####################################################
 
 #more utils
-
+#TODO fix ==> generating too many good predicates!
 def generateNegativePredicate(listOfSubjects, listOfVerbs, listOfObjects, allPredsList):
     #calculate percentage of preds without object
     noneObjsCount = float(listOfObjects.count(None)) / len(listOfObjects)
     #start with a predicate in list of predicates
     pred = allPredsList[0]
+    keep = random.uniform(0,1)
     #set up while loop to run until a pred NOT IN list of predicates appears
-    while pred in allPredsList:
+    #and to only keep every other predicate (since 50% of all predicates are bad)
+    while pred in allPredsList or keep > .50:
         random.shuffle(listOfSubjects)
         subjectWord = listOfSubjects[0]
         random.shuffle(listOfVerbs)
         verbWord = listOfVerbs[0]
         #determine whether there should be an object (according to odds of None in object) or if verb indicates copular
-        if random.randint(0,1) > noneObjsCount and "_" not in verbWord:
+        if "_" not in verbWord:
             random.shuffle(listOfObjects)
             objectWord = listOfObjects[0]
         else:
             objectWord = None
         pred = (subjectWord, verbWord, objectWord)
+        keep = random.uniform(0,1)
 
     return pred
 

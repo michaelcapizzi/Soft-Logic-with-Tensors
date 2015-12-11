@@ -3,6 +3,7 @@ __author__ = 'mcapizzi'
 import NeuralNet as nn
 import tensorflow as tf
 import Similarity as s
+import itertools
 
 
 class Evaluation:
@@ -27,7 +28,7 @@ class Evaluation:
                                         costFunction="crossEntropy",
                                         learningRate=None
                                     )
-        self.parameterFile = "Variables/variables_NN_" + str(hiddenNodes) + "-" + activationFunction + "-crossEntropy-decayedLR-10iters"
+        self.parameterFile = "Variables/variables_NN_preds2_" + str(hiddenNodes) + "-" + activationFunction + "-crossEntropy-decayedLR-10iters"
         #similarity classes
         self.similarityClasses = []
 
@@ -49,7 +50,7 @@ class Evaluation:
         print("building computational graph")
         self.nnClass.buildComputationGraph()
 
-
+    #get similarity rankings for each predicate
     def getSimilarityRankings(self, topN, rankMetric):
         for pred in self.predicates:
             #create similarity class
@@ -60,4 +61,34 @@ class Evaluation:
             #store similarity class
             self.similarityClasses.append(sim)
 
-    #TODO build averaging method
+    def getAverageSimilarity(self, part, rankMetric):
+        if rankMetric == "kendallTau":
+            if part == "subj":
+                justSubjSim = map(lambda x: x.kendallTau[0], self.similarityClasses)
+                return sum(justSubjSim) / float(len(justSubjSim))
+            elif part == "verb":
+                justVerbSim = map(lambda x: x.kendallTau[1], self.similarityClasses)
+                return sum(justVerbSim) / float(len(justVerbSim))
+            elif part == "obj":
+                justObjSim = map(lambda x: x[2], list(itertools.ifilter(lambda x: len(x) == 3, map(lambda x: x.kendallTau, self.similarityClasses))))
+                return sum(justObjSim) / float(len(justObjSim))
+        elif rankMetric == "MRR":
+            if part == "subj":
+                justSubjSim = map(lambda x: x.MRR[0], self.similarityClasses)
+                return sum(justSubjSim) / float(len(justSubjSim))
+            elif part == "verb":
+                justVerbSim = map(lambda x: x.MRR[1], self.similarityClasses)
+                return sum(justVerbSim) / float(len(justVerbSim))
+            elif part == "obj":
+                justObjSim = map(lambda x: x[2], list(itertools.ifilter(lambda x: len(x) == 3, map(lambda x: x.MRR, self.similarityClasses))))
+                return sum(justObjSim) / float(len(justObjSim))
+        elif rankMetric == "NGDC":
+            if part == "subj":
+                justSubjSim = map(lambda x: x.NDGC[0], self.similarityClasses)
+                return sum(justSubjSim) / float(len(justSubjSim))
+            elif part == "verb":
+                justVerbSim = map(lambda x: x.NDGC[1], self.similarityClasses)
+                return sum(justVerbSim) / float(len(justVerbSim))
+            elif part == "obj":
+                justObjSim = map(lambda x: x[2], list(itertools.ifilter(lambda x: len(x) == 3, map(lambda x: x.NDGC, self.similarityClasses))))
+                return sum(justObjSim) / float(len(justObjSim))

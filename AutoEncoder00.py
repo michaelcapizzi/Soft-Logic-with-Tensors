@@ -22,18 +22,16 @@ print ("finished loading word2vec")
     #tanh activation
     #least squares loss
     #decayed learning rate
-testNN = nn.NeuralNet(embeddingClass=w2v, vectorSize=w2v.getVectorSize(),hiddenNodes=400, outputNodes=3 * w2v.getVectorSize(), trainingEpochs=10, activationFunction="tanh", costFunction="RMSE", learningRate=None)
+testNN = nn.NeuralNet(embeddingClass=w2v, vectorSize=w2v.getVectorSize(),hiddenNodes=300, outputNodes=3 * w2v.getVectorSize(), trainingEpochs=10, activationFunction="relu", costFunction="RMSE", learningRate=None)
 
 
 #loading true predicates
-# f = open("Predicates/ALL-predicates-31994.pickle", "rb")
-f = open("Predicates/FILTERED-predicates.pickle", "rb")
+f = open("Predicates/FILTERED-predicatesNoWiki.pickle", "rb")
 testNN.predicates = pickle.load(f)
 f.close()
 
 #loading false predicates
-# f = open("Predicates/ALL-negative_predicates-31994.pickle", "rb")
-f = open("Predicates/FILTERED-negative_predicates.pickle", "rb")
+f = open("Predicates/FILTERED-negative_predicatesNoWiki.pickle", "rb")
 testNN.negPredicates = pickle.load(f)
 f.close()
 
@@ -66,7 +64,7 @@ if __name__ == "__main__":
 
 
     #save parameters
-    testNN.saveVariables("Variables/variables_AutoEncoder_400-tanh-loss-decayedLR-10iters")
+    testNN.saveVariables("Variables/variables_AutoEncoder_preds2_300-relu-loss-decayedLR-10iters")
 
 
 

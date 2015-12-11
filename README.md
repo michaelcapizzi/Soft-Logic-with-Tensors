@@ -1,3 +1,12 @@
+original predicates
+=========================
+
+negative predicates
+--------------------
+
+147/300 were acceptable predicates
+50%
+
 results of tanh, loss, 2 iterations
 ----------------------------------------
 
@@ -721,6 +730,9 @@ verb => .220
 
 relu 300 training results - closest 10, kendall Tau
 ----------------------------------------------------
+
+subj => -1
+verb => -1
 
 
 
