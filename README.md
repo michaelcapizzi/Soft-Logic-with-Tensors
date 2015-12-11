@@ -705,3 +705,22 @@ sample predictions made by nn
     array([[ 0.59040338,  0.40959659]], dtype=float32)
     >>> n.testNN.session.run(n.testNN.predictOp, feed_dict={n.testNN.input: n.testNN.getVector(("tiger", "is_mammal", None))})
     array([[ 0.59109175,  0.40890825]], dtype=float32)
+
+
+tanh 400 training results - closest 10, kendall Tau
+----------------------------
+
+subj => .022
+verb => .200
+
+tanh 300 training results - closest 10, kendall Tau
+----------------------------------------------------
+
+subj => .043
+verb => .220
+
+relu 300 training results - closest 10, kendall Tau
+----------------------------------------------------
+
+
+
