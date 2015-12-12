@@ -21,7 +21,7 @@ print ("finished loading word2vec")
 #tanh activation
 #cross_entropy loss
 #decayed learning rate
-testNN = nn.NeuralNet(embeddingClass=w2v, vectorSize=w2v.getVectorSize(),hiddenNodes=150, outputNodes=2, trainingEpochs=10, activationFunction="relu", costFunction="crossEntropy", learningRate=None)
+testNN = nn.NeuralNet(embeddingClass=w2v, vectorSize=w2v.getVectorSize(),hiddenNodes=50, outputNodes=2, trainingEpochs=10, activationFunction="tanh", costFunction="crossEntropy", learningRate=None)
 
 
 #loading true predicates
@@ -44,8 +44,8 @@ importedW1 = tf.Variable(tf.zeros([testNN.inputDimensions, testNN.hiddenNodes]))
 importedb1 = tf.Variable(tf.zeros([1, testNN.hiddenNodes]))
 
 #load variables into empties
-testNN.loadVariables("Variables/variables_AutoEncoder_preds2_150-relu-loss-decayedLR-10iters", variableName="W1", targetName=importedW1)
-testNN.loadVariables("Variables/variables_AutoEncoder_preds2_150-relu-loss-decayedLR-10iters", variableName="b1", targetName=importedb1)
+testNN.loadVariables("Variables/variables_AutoEncoder_preds2_50-tanh-loss-decayedLR-10iters", variableName="W1", targetName=importedW1)
+testNN.loadVariables("Variables/variables_AutoEncoder_preds2_50-tanh-loss-decayedLR-10iters", variableName="b1", targetName=importedb1)
 
 #create all parameters for NN (including initializing W1 and b1 from Autoencoder)
 testNN.initializeParameters(useAutoEncoder=True, existingW1=importedW1, existingB1=importedb1)
@@ -68,7 +68,7 @@ if __name__ == "__main__":
 
 
     #save parameters
-    testNN.saveVariables("Variables/variables_NN_preds2_150-relu-crossEntropy-decayedLR-10iters")
+    testNN.saveVariables("Variables/variables_NN_preds2_50-tanh-crossEntropy-decayedLR-10iters")
 
 
 

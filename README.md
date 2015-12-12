@@ -716,23 +716,25 @@ sample predictions made by nn
     array([[ 0.59109175,  0.40890825]], dtype=float32)
 
 
-tanh 400 training results - closest 10, kendall Tau
+tanh 300 training results - closest 10, kendall Tau
 ----------------------------
 
-subj => .022
-verb => .200
+subj = .052
+verb = -.025
+obj = .029
 
-tanh 300 training results - closest 10, kendall Tau
-----------------------------------------------------
+relu 300 training results
+-------------------------
 
-subj => .043
-verb => .220
+subj = -1
+verb = -1
+obj = -1
 
-relu 300 training results - closest 10, kendall Tau
-----------------------------------------------------
+relu 150 training results
+--------------------------
 
-subj => -1
-verb => -1
+
+
 
 
 
