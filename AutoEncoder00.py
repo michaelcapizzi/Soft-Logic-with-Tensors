@@ -22,7 +22,7 @@ print ("finished loading word2vec")
     #tanh activation
     #least squares loss
     #decayed learning rate
-testNN = nn.NeuralNet(embeddingClass=w2v, vectorSize=w2v.getVectorSize(),hiddenNodes=300, outputNodes=3 * w2v.getVectorSize(), trainingEpochs=10, activationFunction="relu", costFunction="RMSE", learningRate=None)
+testNN = nn.NeuralNet(embeddingClass=w2v, vectorSize=w2v.getVectorSize(),hiddenNodes=150, outputNodes=3 * w2v.getVectorSize(), trainingEpochs=10, activationFunction="relu", costFunction="RMSE", learningRate=None)
 
 
 #loading true predicates
@@ -64,7 +64,7 @@ if __name__ == "__main__":
 
 
     #save parameters
-    testNN.saveVariables("Variables/variables_AutoEncoder_preds2_300-relu-loss-decayedLR-10iters")
+    testNN.saveVariables("Variables/variables_AutoEncoder_preds2_150-relu-loss-decayedLR-10iters")
 
 
 

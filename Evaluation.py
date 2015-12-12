@@ -5,7 +5,6 @@ import tensorflow as tf
 import Similarity as s
 import itertools
 
-
 class Evaluation:
     """
     class for evaluating dataset
@@ -17,6 +16,7 @@ class Evaluation:
 
     def __init__(self, positivePredicateList, embeddingClass, hiddenNodes, activationFunction):
         self.predicates = positivePredicateList
+        self.relevantPredicates = None
         self.embeddingClass = embeddingClass
         self.nnClass = nn.NeuralNet (
                                         embeddingClass=embeddingClass,
@@ -31,6 +31,17 @@ class Evaluation:
         self.parameterFile = "Variables/variables_NN_preds2_" + str(hiddenNodes) + "-" + activationFunction + "-crossEntropy-decayedLR-10iters"
         #similarity classes
         self.similarityClasses = []
+
+
+    #finds predicates relevant to a subset (wordNetList)
+    def findRelevantPredicates(self, wordNetList):
+        relevant = []
+        for word in wordNetList:
+            matching = itertools.ifilter(lambda x: x[0].lower() == word.lower(), self.predicates)
+            [relevant.append(pred) for pred in matching]
+        self.relevantPredicates = relevant[:]
+        return relevant
+
 
 
     def buildNN(self):
@@ -50,17 +61,30 @@ class Evaluation:
         print("building computational graph")
         self.nnClass.buildComputationGraph()
 
+
     #get similarity rankings for each predicate
     def getSimilarityRankings(self, topN, rankMetric):
-        for pred in self.predicates:
-            #create similarity class
-            print(pred)
-            sim = s.Similarity(pred, self.nnClass)
-            #run ranking evaluation
-            sim.runAll(topN, rankMetric)
-            #store similarity class
-            self.similarityClasses.append(sim)
+        if not self.relevantPredicates:
+            for pred in self.predicates:
+                #create similarity class
+                print(pred)
+                sim = s.Similarity(pred, self.nnClass)
+                #run ranking evaluation
+                sim.runAll(topN, rankMetric)
+                #store similarity class
+                self.similarityClasses.append(sim)
+        else:
+            for pred in self.relevantPredicates:
+                #create similarity class
+                print(pred)
+                sim = s.Similarity(pred, self.nnClass)
+                #run ranking evaluation
+                sim.runAll(topN, rankMetric)
+                #store similarity class
+                self.similarityClasses.append(sim)
 
+
+    #calculates average across all words
     def getAverageSimilarity(self, part, rankMetric):
         if rankMetric == "kendallTau":
             if part == "subj":
@@ -92,3 +116,7 @@ class Evaluation:
             elif part == "obj":
                 justObjSim = map(lambda x: x[2], list(itertools.ifilter(lambda x: len(x) == 3, map(lambda x: x.NDGC, self.similarityClasses))))
                 return sum(justObjSim) / float(len(justObjSim))
+
+#######################################################################################
+#######################################################################################
+
