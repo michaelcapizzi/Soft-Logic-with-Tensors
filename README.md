@@ -715,6 +715,12 @@ sample predictions made by nn
     >>> n.testNN.session.run(n.testNN.predictOp, feed_dict={n.testNN.input: n.testNN.getVector(("tiger", "is_mammal", None))})
     array([[ 0.59109175,  0.40890825]], dtype=float32)
 
+tanh 400 training results
+-------------------------
+
+subj = .053
+verb = -.057
+obj = -.125
 
 tanh 300 training results - closest 10, kendall Tau
 ----------------------------
@@ -722,6 +728,19 @@ tanh 300 training results - closest 10, kendall Tau
 subj = .052
 verb = -.025
 obj = .029
+
+tanh 300 animalsubset results
+------------------------------
+
+tanh300 thingsubset results
+----------------------------
+
+tanh300 movesubset results
+----------------------------
+
+tanh300 feelsubset results
+------------------------------
+
 
 relu 300 training results
 -------------------------
@@ -733,8 +752,23 @@ obj = -1
 relu 150 training results
 --------------------------
 
+subj = -1
+verb = -1
+obj = -1
 
+tanh 150 training results
+-------------------------
 
+subj = .059
+verb = -.023
+obj = -.129
+
+tanh 75 training results
+------------------------
+
+subj = -.005
+verb = -.039
+obj = .049
 
 
 

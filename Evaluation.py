@@ -34,10 +34,13 @@ class Evaluation:
 
 
     #finds predicates relevant to a subset (wordNetList)
-    def findRelevantPredicates(self, wordNetList):
+    def findRelevantPredicates(self, wordNetList, pos):
         relevant = []
         for word in wordNetList:
-            matching = itertools.ifilter(lambda x: x[0].lower() == word.lower(), self.predicates)
+            if pos == "n":
+                matching = itertools.ifilter(lambda x: x[0].lower() == word.lower() or x[2].lower() == word.lower(), self.predicates)
+            elif pos == "v":
+                matching = itertools.ifilter(lambda x: x[1].lower() == word.lower(), self.predicates)
             [relevant.append(pred) for pred in matching]
         self.relevantPredicates = relevant[:]
         return relevant
