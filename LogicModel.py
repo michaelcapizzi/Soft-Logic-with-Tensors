@@ -281,20 +281,3 @@ class LogicModel:
                                                 axes=1).reshape((2,2)).T,
                                 truthValue1,                                    #the antecedent
                             axes=1)
-
-
-##############################################################
-
-#unary
-#np.tensordot(mod.getUnaryPredicate("is_mathematician"), mod.getOneHot("john"), axes=1)
-
-#neg
-#np.tensordot(mod.negConnect, mod.isTrue, axes=1)
-#np.tensordot(mod.negConnect, np.tensordot(mod.negConnect, mod.isTrue, axes=1), axes=1)
-
-#connective
-#np.tensordot(np.tensordot(mod.andConnect, mod.isTrue, axes=1).reshape((2,2)).T, mod.isFalse, axes=1)
-
-#binary
-#np.tensordot(np.tensordot(lovesManual, mod2.getOneHot("mary"),axes=1).reshape((2,2)), mod2.getOneHot("john"),axes=1)
-    #reshape(2, [# of elements in domain])

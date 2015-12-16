@@ -38,7 +38,7 @@ class Evaluation:
         relevant = []
         for word in wordNetList:
             if pos == "n":
-                matching = itertools.ifilter(lambda x: x[0].lower() == word.lower() or x[2].lower() == word.lower(), self.predicates)
+                matching = itertools.ifilter(lambda x: x[0].lower() == word.lower() or x[2] == word, self.predicates)
             elif pos == "v":
                 matching = itertools.ifilter(lambda x: x[1].lower() == word.lower(), self.predicates)
             [relevant.append(pred) for pred in matching]

@@ -732,14 +732,32 @@ obj = .029
 tanh 300 animalsubset results
 ------------------------------
 
+subj = .030
+verb = -.039
+obj = .014
+
 tanh300 thingsubset results
 ----------------------------
+
+subj = .030
+verb = -.039
+obj = .013
 
 tanh300 movesubset results
 ----------------------------
 
+subj = .035
+verb = -.032
+obj = .007
+
+
 tanh300 feelsubset results
 ------------------------------
+
+subj = .038
+verb = -.028
+obj = .004
+
 
 
 relu 300 training results
