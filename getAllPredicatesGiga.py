@@ -46,10 +46,10 @@ for disk in allFiles:
                     clean = depClass.cleanDeps("SENNA", raw)
                     preds = depClass.extractPredicates("SENNA", clean)
                     [allPreds.append(p) for p in preds]
-                    print("pickling batch %s of file %s" %(str(batch+1), file))
+                    print("pickling batch %s of file %s" %(str(batch+1), fileF))
                     pickle.dump(preds, pf)
                     pf.close()
-                    print "pickled batch %s of file %s" %(str(batch + 1), file)
+                    print "pickled batch %s of file %s" %(str(batch + 1), fileF)
 
 #if it gets through everthing without an error
 f2 = open("Predicates/Gigaword/ALL" + ".pickle", "wb")
