@@ -197,6 +197,7 @@ def extractPredicate(cleanDep):
                     predicates[predicateCounter] = (predicates[predicateCounter][0], predicates[predicateCounter][1], cleanDep[k][0])
                     break
                 #copular
+                #TODO fix copular to handle correct form of "to-be"
                 elif cleanDep[k][1] == "cop":
                     predicates[predicateCounter] = (predicates[predicateCounter][0], "is_" + predicates[predicateCounter][1], None)
                     break
