@@ -16,10 +16,11 @@ allPreds = []
 finished = []
 stuck = []
 skip = finished + stuck
-allFiles = os.listdir("/work/mcapizzi/Github/Content/src/main/resources/gigaword/")
+allDir = "/work/mcapizzi/Github/Content/src/main/resources/gigaword/"
+allFiles = os.listdir(allDir)
 for dir in allFiles:
     print dir
-    allDisks = os.listdir(allFiles + dir)
+    allDisks = os.listdir(allDir + dir)
     for disk in allDisks:
         print disk
         for folder in os.listdir(disk + "/data/"):
