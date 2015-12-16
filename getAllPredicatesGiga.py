@@ -26,7 +26,7 @@ for disk in allFiles:
             if fileF not in skip:
                 print "handling " + fileF
                 #open file
-                f = open(allDir + disk + "/data/" + folder + fileF)
+                f = open(allDir + disk + "/data/" + folder + "/" + fileF)
                 #make Data class
                 dataClass = data.Data(f)
                 #tokenize
