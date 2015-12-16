@@ -19,7 +19,7 @@ skip = finished + stuck
 allFiles = os.listdir("/work/mcapizzi/Github/Content/src/main/resources/gigaword/")
 for dir in allFiles:
     print dir
-    allDisks = os.listdir(dir)
+    allDisks = os.listdir(allFiles + dir)
     for disk in allDisks:
         print disk
         for folder in os.listdir(disk + "/data/"):
