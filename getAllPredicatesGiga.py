@@ -20,9 +20,9 @@ allDir = "/work/mcapizzi/Github/Content/src/main/resources/gigaword/"
 allFiles = os.listdir(allDir)
 for disk in allFiles:
     print disk
-    for folder in os.listdir(disk + "/data/"):
+    for folder in os.listdir(allDir + disk + "/data/"):
         print folder
-        for fileF in os.listdir(folder):
+        for fileF in os.listdir(allDir + disk + "/data/" + folder):
             print fileF
 #
 # toAnalyze = itertools.ifilterfalse(lambda x: x in skip, allFiles)
