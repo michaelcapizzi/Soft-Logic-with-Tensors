@@ -18,15 +18,12 @@ stuck = []
 skip = finished + stuck
 allDir = "/work/mcapizzi/Github/Content/src/main/resources/gigaword/"
 allFiles = os.listdir(allDir)
-for dir in allFiles:
-    print dir
-    allDisks = os.listdir(allDir + dir)
-    for disk in allDisks:
-        print disk
-        for folder in os.listdir(disk + "/data/"):
-            print folder
-            for fileF in os.listdir(folder):
-                print fileF
+for disk in allFiles:
+    print disk
+    for folder in os.listdir(disk + "/data/"):
+        print folder
+        for fileF in os.listdir(folder):
+            print fileF
 #
 # toAnalyze = itertools.ifilterfalse(lambda x: x in skip, allFiles)
 #
