@@ -58,6 +58,8 @@ for disk in itertools.ifilter(lambda x: x not in finishedDisk, allFiles):
                     pickle.dump(preds, pf)
                     pf.close()
                     print "pickled batch %s of file %s" %(str(batch + 1), fileF)
+            else:
+                print "skipping " + fileF
 
 # #if it gets through everthing without an error
 # f2 = open("Predicates/Gigaword/ALL" + ".pickle", "wb")
