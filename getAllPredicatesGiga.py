@@ -12,13 +12,17 @@ import itertools
 #initialize variable for all predicates
 # allPreds = []
 
-d3StuckFile = ["200104"]
+# finished = set(map(lambda x: x[0:32], os.listdir("Predicates/Gigaword/attempt02/")))
+
+d3StuckFile = ["200104", "201004"]
 d3FinishedFile = ["199802", "200711", "200604", "200610", "199512", "200003", "200109", "200007", "200005", "200208", "200303", "201004", "199811", "200806", "200106", "200606", "199508", "200406", "200403", "200402", "199912", "201003", "200212", "200210", "200011", "201009"]
 skipd3 = d3StuckFile + d3FinishedFile
-d3ToSkip = map(lambda x: "gigaword_eng_5_d3_xin_eng_" + x, skipd3)
+d3ToSkip = map(lambda x: "xin_eng_" + x, skipd3)
 
 finishedDisk = []
 toSkip = d3ToSkip
+
+print toSkip
 
 allDir = "/work/mcapizzi/Github/Content/src/main/resources/gigaword/"
 allFiles = os.listdir(allDir)
