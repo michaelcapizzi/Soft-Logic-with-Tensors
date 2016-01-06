@@ -66,3 +66,29 @@ for disk in itertools.ifilter(lambda x: x not in finishedDisk, allFiles):
 # pickle.dump(allPreds, f2)
 # f2.close()
 
+#returns a list of finished pickle files
+def findFinished(attempt):
+    dir = os.listdir("/work/mcapizzi/Github/Semantics/Predicates/Gigaword/" + attempt + "/")
+    finished = map(lambda x: x[:-7], dir)
+    return finished
+
+#merge all pickles into one big one .txt file with each pred on a line
+def pickleMerge(dir, finalFilePath):
+    #all pickles
+    allPickles = os.listdir(dir)
+    #list to hold concatenate pickles
+    finalPickle = []
+    #iterate through all pickles
+    for p in allPickles:
+        #open the pickle
+        f = open(p, "wb")
+        loaded = pickle.load(f)
+        f.close()
+        #concatenate to list
+        finalPickle += loaded
+    f2 = open(finalFilePath, "w")
+    for pick in finalPickle:
+        f2.write(pick + "\n")
+    f2.close()
+
+
