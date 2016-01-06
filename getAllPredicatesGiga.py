@@ -18,7 +18,7 @@ def findFinished(attempt):
 #merge all pickles into one big one .txt file with each pred on a line
 def pickleMerge(dir, finalFilePath):
     #to skip
-    toSkip = ["gigaword_eng_5_d3_xin_eng_200409-880.pickle", "gigaword_eng_5_d1_apw_eng_200911-1.pickle"]
+    toSkip = ["gigaword_eng_5_d3_xin_eng_200409-880.pickle", "gigaword_eng_5_d1_apw_eng_200911-1.pickle", "gigaword_eng_5_d3_xin_eng_201004-1424.pickle"]
     #all pickles
     allPickles = os.listdir(dir)
     #list to hold concatenate pickles
