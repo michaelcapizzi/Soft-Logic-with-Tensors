@@ -34,7 +34,10 @@ def pickleMerge(dir, finalFilePath):
         finalPickle += loaded
     f2 = open(finalFilePath, "w")
     for pick in finalPickle:
-        f2.write(pick[0] + "\t" + pick[1] + "\t" + pick[2] + "\n")
+        if not pick[2]:
+            f2.write(pick[0] + "\t" + pick[1] + "\tNone\n")
+        else:
+            f2.write(pick[0] + "\t" + pick[1] + "\t" + pick[2] + "\n")
     f2.close()
 
 
