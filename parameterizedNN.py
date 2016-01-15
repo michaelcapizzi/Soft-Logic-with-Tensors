@@ -12,6 +12,11 @@ inputDimensions = vectorSize * 3
 activationFunction = "tanh"
 costFunction = "crossEntropy"   #"RMSE"
 
+#add inputDimensions as hiddenLayer[0]
+hiddenDimensions.insert(0, inputDimensions)
+#add outputDimensions as hiddenLayer[+1]
+hiddenDimensions.append(outputDimensions)
+
 #placeholders
 input = tf.placeholder("float", name="Input", shape=[None, inputDimensions])
 label = tf.placeholder("float", name="Label", shape=[None, outputDimensions])
@@ -20,43 +25,59 @@ label = tf.placeholder("float", name="Label", shape=[None, outputDimensions])
 weights = {}
 biases = {}
 
-for i in range(0, hiddenLayers + 1):    #+1 to treat the output layer as a "hidden layer"
-    #if into first hidden layer
-    if i == 0:      #input -> hidden[0]
-        weights["W{0}".format(i)] = tf.Variable(tf.random_normal(
-                [inputDimensions, hiddenDimensions[0]],   #input x hidden[0]
-                mean=0,
-                stddev=math.sqrt(float(6) / float(inputDimensions + outputDimensions + 1))),
-                name="W" + str(i+1))
+for i in range(len(hiddenDimensions) - 1):    #+1 to treat the output layer as a "hidden layer"
+    weights["W{0}".format(i + 1)] = tf.Variable(tf.random_normal(
+        [hiddenDimensions[i], hiddenDimensions[i + 1]],     #hidden[i] x hidden[i + 1]
+        mean=0,
+        stddev=math.sqrt(float(6) / float(hiddenDimensions[i] + hiddenDimensions[-1] + 1))),
+        name="W" + str(i + 1)
+    )
+    biases["b{0}".format(i + 1)] = tf.Variable(tf.random_normal(
+        [1, hiddenDimensions[i]],       #1 x hidden[0]
+        mean=0,
+        stddev=math.sqrt(float(6) / float(inputDimensions + outputDimensions + 1))),
+        name="b" + str(i+1)
+    )
 
-        biases["b{0}".format(i)] = tf.Variable(tf.random_normal(
-                [1, hiddenDimensions[0]],       #1 x hidden[0]
-                mean=0,
-                stddev=math.sqrt(float(6) / float(inputDimensions + outputDimensions + 1))),
-                name="b" + str(i+1))
-    #if into output layer
-    elif i == hiddenLayers + 1:     #hidden[i-1] -> output
-        weights["W{0}".format(i)] = tf.Variable(tf.random_normal(
-                [hiddenDimensions[i - 1], outputDimensions],    #hidden[last] x output
-                mean=0,
-                stddev=math.sqrt(float(6) / float(inputDimensions + outputDimensions + 1))),
-                name="W" + str(i+1))
+print weights
+print biases
 
-        biases["b{0}".format(i)] = tf.Variable(tf.random_normal(
-                [1, outputDimensions],         #1 x output
-                mean=0,
-                stddev=math.sqrt(float(6) / float(inputDimensions + outputDimensions + 1))),
-                name="b" + str(i+1))
-    #if into inside layer(s)
-    else:
-        weights["W{0}".format(i)] = tf.Variable(tf.random_normal(
-                [hiddenDimensions[i - 1], hiddenDimensions[i]],    #hidden[i-1] x hidden[i]
-                mean=0,
-                stddev=math.sqrt(float(6) / float(inputDimensions + outputDimensions + 1))),
-                name="W" + str(i+1))
-
-        biases["b{0}".format(i)] = tf.Variable(tf.random_normal(
-                [1, hiddenDimensions[i]],       #1 x hidden[i]
-                mean=0,
-                stddev=math.sqrt(float(6) / float(inputDimensions + outputDimensions + 1))),
-                name="b" + str(i+1))
+    # #if into first hidden layer
+    # if i == 0:      #input -> hidden[0]
+    #     weights["W{0}".format(i + 1)] = tf.Variable(tf.random_normal(
+    #             [inputDimensions, hiddenDimensions[0]],   #input x hidden[0]
+    #             mean=0,
+    #             stddev=math.sqrt(float(6) / float(inputDimensions + outputDimensions + 1))),
+    #             name="W" + str(i+1))
+    #
+    #     biases["b{0}".format(i + 1)] = tf.Variable(tf.random_normal(
+    #             [1, hiddenDimensions[0]],       #1 x hidden[0]
+    #             mean=0,
+    #             stddev=math.sqrt(float(6) / float(inputDimensions + outputDimensions + 1))),
+    #             name="b" + str(i+1))
+    # #if into output layer
+    # elif i == hiddenLayers + 1:     #hidden[i-1] -> output
+    #     weights["W{0}".format(i + 1)] = tf.Variable(tf.random_normal(
+    #             [hiddenDimensions[i - 1], outputDimensions],    #hidden[last] x output
+    #             mean=0,
+    #             stddev=math.sqrt(float(6) / float(inputDimensions + outputDimensions + 1))),
+    #             name="W" + str(i+1))
+    #
+    #     biases["b{0}".format(i + 1)] = tf.Variable(tf.random_normal(
+    #             [1, outputDimensions],         #1 x output
+    #             mean=0,
+    #             stddev=math.sqrt(float(6) / float(inputDimensions + outputDimensions + 1))),
+    #             name="b" + str(i+1))
+    # #if into inside layer(s)
+    # else:
+    #     weights["W{0}".format(i + 1)] = tf.Variable(tf.random_normal(
+    #             [hiddenDimensions[i - 1], hiddenDimensions[i]],    #hidden[i-1] x hidden[i]
+    #             mean=0,
+    #             stddev=math.sqrt(float(6) / float(inputDimensions + outputDimensions + 1))),
+    #             name="W" + str(i+1))
+    #
+    #     biases["b{0}".format(i + 1)] = tf.Variable(tf.random_normal(
+    #             [1, hiddenDimensions[i]],       #1 x hidden[i]
+    #             mean=0,
+    #             stddev=math.sqrt(float(6) / float(inputDimensions + outputDimensions + 1))),
+    #             name="b" + str(i+1))
