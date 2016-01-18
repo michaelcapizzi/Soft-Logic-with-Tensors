@@ -359,8 +359,6 @@ class NeuralNet:
 
 ##########
 
-#TODO confirm cost function is correct:
-    #http://stackoverflow.com/questions/33846069/how-to-set-rmse-cost-function-in-tensorflow
     #cost
         #output = feedforward
     def calculateCost(self, outputOp, labels, isAutoEncoder=False):
