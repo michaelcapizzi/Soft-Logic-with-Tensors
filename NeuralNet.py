@@ -359,6 +359,8 @@ class NeuralNet:
 
 ##########
 
+#TODO confirm cost function is correct:
+    #http://stackoverflow.com/questions/33846069/how-to-set-rmse-cost-function-in-tensorflow
     #cost
         #output = feedforward
     def calculateCost(self, outputOp, labels, isAutoEncoder=False):
@@ -376,6 +378,7 @@ class NeuralNet:
                 #                                 self.weights["W2"].eval(session=self.session).sum()
                 #                                 ),
                 #                         name="RegularizationTerm")
+                #TODO what does reduce_mean do here when `squaredError` is already a scalar?
                 loss = tf.reduce_mean(squaredError, name="Loss")
         else:
             crossEntropy = tf.nn.softmax_cross_entropy_with_logits(outputOp, labels, name="CrossEntropy")

@@ -25,6 +25,7 @@ label = tf.placeholder("float", name="Label", shape=[None, outputDimensions])
 weights = {}
 biases = {}
 
+#confirmed correct code!
 for i in range(len(hiddenDimensions) - 1):    #+1 to treat the output layer as a "hidden layer"
     weights["W{0}".format(i + 1)] = tf.Variable(tf.random_normal(
         [hiddenDimensions[i], hiddenDimensions[i + 1]],     #hidden[i] x hidden[i + 1]
@@ -39,8 +40,18 @@ for i in range(len(hiddenDimensions) - 1):    #+1 to treat the output layer as a
         name="b" + str(i+1)
     )
 
-print weights
-print biases
+#code to set up evaluation of variables
+init_op = tf.initialize_all_variables()
+sess = tf.Session()
+sess.run(init_op)
+
+for v in weights.keys():
+    print(v + " has a shape of " + str(weights[v].eval(sess).shape))
+
+for b in biases.keys():
+    print(b + " has a shape of " + str(biases[b].eval(sess).shape))
+
+
 
     # #if into first hidden layer
     # if i == 0:      #input -> hidden[0]
