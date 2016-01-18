@@ -64,13 +64,22 @@ randomInput = np.random.rand(1,900).astype("float32")
 #TODO test
 #code for one layer
 def oneLayer(layerInputX, layerNumber, layerWeightsDict, layerBiasesDict, layerActivation):
-    z = tf.add(
-            tf.matmul(
-                    layerInputX,
-                    layerWeightsDict["W" + str(layerNumber + 1)]),
-            layerBiasesDict["b" + str(layerNumber + 1)],
-            name="Hidden" + str(layerNumber)
-    )
+    if layerActivation != "none":
+        z = tf.add(
+                tf.matmul(
+                        layerInputX,
+                        layerWeightsDict["W" + str(layerNumber + 1)]),
+                layerBiasesDict["b" + str(layerNumber + 1)],
+                name="Hidden" + str(layerNumber)
+        )
+    else:   #to label the output layer as such
+        z = tf.add(
+                tf.matmul(
+                        layerInputX,
+                        layerWeightsDict["W" + str(layerNumber + 1)]),
+                layerBiasesDict["b" + str(layerNumber + 1)],
+                name="Output"
+        )
 
     if layerActivation == "sigmoid":
         a = tf.nn.sigmoid(z, name="sigmoidActivation" + str(layerNumber))
@@ -83,6 +92,8 @@ def oneLayer(layerInputX, layerNumber, layerWeightsDict, layerBiasesDict, layerA
 
     return a
 
+
+#for multiple layers
 def feedForwardGeneralized(inputX, numberOfLayers, weightsDict, biasesDict, activation):
     #initialize input with original input
     intoLayer = inputX
