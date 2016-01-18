@@ -8,19 +8,19 @@ import random
 
 #TODO add penalty term to RMSE cost function
 #TODO determine convergence method -- perhaps use separate steps for gradient
-    #https://www.tensorflow.org/versions/master/api_docs/python/train.html#Optimizer.minimize
+#https://www.tensorflow.org/versions/master/api_docs/python/train.html#Optimizer.minimize
 
 
-class NeuralNet:
+class RankingNeuralNet:
     """
-    builds neural network to be fed predicates
+    builds neural network to be fed predicates (using ranking cost function)
         number of classes ==> binary but with softmax layers
         :param embeddingClass ==> the embedding class from which the word2vecs can be loaded
         :param vectorSize ==> length of each individual embedding vector
         :param learningRate ==> for gradient descent
         :param trainingEpochs ==> for gradient descent
         :param batchSize ==> for gradient descent
-        :param outputDimensions
+        :param outputDimensions --> in this case will be 1
         :param hiddenNodes
         :param activationFunction
         :param costFunction
@@ -41,11 +41,11 @@ class NeuralNet:
         #hyperparameters
         if not learningRate:            #if no learning rate is set, use exponential_decay
             self.learningRate = tf.train.exponential_decay(
-                learning_rate=0.01,
-                global_step= 1,
-                decay_steps=50000,   #should be size of data: estimated at 50k
-                decay_rate= 0.95,
-                staircase=True
+                    learning_rate=0.01,
+                    global_step= 1,
+                    decay_steps=50000,   #should be size of data: estimated at 50k
+                    decay_rate= 0.95,
+                    staircase=True
             )
         else:
             self.learningRate = learningRate
@@ -71,9 +71,9 @@ class NeuralNet:
         self.session = tf.Session()
 
 
-##############################################################################
-#utils
-##############################################################################
+    ##############################################################################
+    #utils
+    ##############################################################################
 
     #pickle thing
     def pickle(self, thing, fname):
@@ -90,14 +90,14 @@ class NeuralNet:
         #return thing
         return thing
 
-########
+    ########
 
     #TODO fix or dump -- doesn't work
     #load embeddings
     def loadEmbeddings(self, fname):
         self.embeddingClass.loadModel(fname)
 
-########
+    ########
 
     #generate random predicates
     def getNegativePredicates(self):
@@ -184,59 +184,59 @@ class NeuralNet:
 
 
 
-    #generate vectors for all predicates in NeuralNet class
-    # def getVectors(self):
-    #     for predicate in self.predicates:
-    #         #deconstruct copulars
-    #         if "_" in predicate[1]:
-    #             predPortion = predicate[1][3:]
-    #             predicate = (predicate[0], "is", predPortion)
-    #
-    #         if predicate[0]:
-    #         #if the uppercase exists
-    #             capture = self.embeddingClass.getVector(predicate[0])
-    #             if capture is not None:
-    #                 subjectWord = capture
-    #             #back off to trying lowercase
-    #             else:
-    #                 subjectWord = self.embeddingClass.getVector(predicate[0].lower())
-    #         else:
-    #             subjectWord = None
-    #         if predicate[1]:
-    #             #if the uppercase exists
-    #             capture = self.embeddingClass.getVector(predicate[1])
-    #             if capture is not None:
-    #                 verbWord = capture
-    #             #back off to trying lowercase
-    #             else:
-    #                 verbWord = self.embeddingClass.getVector(predicate[1].lower())
-    #         else:
-    #             verbWord = None
-    #         if predicate[2]:
-    #             #if the uppercase exists
-    #             capture = self.embeddingClass.getVector(predicate[2])
-    #             if capture is not None:
-    #                 objectWord = capture
-    #             #back off to trying lowercase
-    #             else:
-    #                 objectWord = self.embeddingClass.getVector(predicate[2].lower())
-    #                 if objectWord is None:
-    #                     objectWord = np.zeros(self.vectorSize)
-    #         else:
-    #             objectWord = np.zeros(self.vectorSize)
-    #         if subjectWord is not None and verbWord is not None:
-    #             v = np.concatenate((subjectWord, verbWord, objectWord))
-    #             self.predVectors.append(v)
+        #generate vectors for all predicates in NeuralNet class
+        # def getVectors(self):
+        #     for predicate in self.predicates:
+        #         #deconstruct copulars
+        #         if "_" in predicate[1]:
+        #             predPortion = predicate[1][3:]
+        #             predicate = (predicate[0], "is", predPortion)
+        #
+        #         if predicate[0]:
+        #         #if the uppercase exists
+        #             capture = self.embeddingClass.getVector(predicate[0])
+        #             if capture is not None:
+        #                 subjectWord = capture
+        #             #back off to trying lowercase
+        #             else:
+        #                 subjectWord = self.embeddingClass.getVector(predicate[0].lower())
+        #         else:
+        #             subjectWord = None
+        #         if predicate[1]:
+        #             #if the uppercase exists
+        #             capture = self.embeddingClass.getVector(predicate[1])
+        #             if capture is not None:
+        #                 verbWord = capture
+        #             #back off to trying lowercase
+        #             else:
+        #                 verbWord = self.embeddingClass.getVector(predicate[1].lower())
+        #         else:
+        #             verbWord = None
+        #         if predicate[2]:
+        #             #if the uppercase exists
+        #             capture = self.embeddingClass.getVector(predicate[2])
+        #             if capture is not None:
+        #                 objectWord = capture
+        #             #back off to trying lowercase
+        #             else:
+        #                 objectWord = self.embeddingClass.getVector(predicate[2].lower())
+        #                 if objectWord is None:
+        #                     objectWord = np.zeros(self.vectorSize)
+        #         else:
+        #             objectWord = np.zeros(self.vectorSize)
+        #         if subjectWord is not None and verbWord is not None:
+        #             v = np.concatenate((subjectWord, verbWord, objectWord))
+        #             self.predVectors.append(v)
 
-########
+    ########
 
     #find closest word to a given vector
-        #topN = number of matches to return
+    #topN = number of matches to return
     def getClosestWord(self, vector, topN):
         return self.embeddingClass.embeddingModel.most_similar([vector], topn=topN)
 
 
-    #find closest predicate to a given predicate vector
+        #find closest predicate to a given predicate vector
         #makeNone = boolean ==> try to make it easier to predict None obj
     def getClosestPredicate(self, predVector, topN, makeNone):
         # predVector = predVector.reshape((predVector.shape[1],))
@@ -263,7 +263,7 @@ class NeuralNet:
     def vectorSimV(self, word1, word2):
         return self.embeddingClass.embeddingModel.similarity(word1, word2)
 
-########
+    ########
 
     #save variables -- saves all variables
     def saveVariables(self, fname):
@@ -271,7 +271,7 @@ class NeuralNet:
         saver.save(self.session, fname + ".ckpt")
 
 
-    #load variable
+        #load variable
         #  if variableName is None loads all variables from saved
         #  note: all variables to be loaded must be built with zeros first!
     def loadVariables(self, fname, variableName=None, targetName=None):
@@ -281,18 +281,17 @@ class NeuralNet:
         else:
             saver = tf.train.Saver({variableName:targetName})
             saver.restore(self.session, fname + ".ckpt")
-#########
+        #########
 
     def visualizeWeights(self, W1):
         staticW1 = W1.eval(session=self.session)
         for i in range(staticW1.shape[1]):
             return self.getClosestPredicate(staticW1[:,i].reshape((staticW1.shape[0],)), 1, makeNone=False)
 
-##############################################################################
-#variable setup
-##############################################################################
+        ##############################################################################
+        #variable setup
+        ##############################################################################
 
-    #TODO confirm this is done correctly
     #initialize weights
     def initializeParameters(self, useAutoEncoder=False, existingW1=None, existingB1=None):
         if useAutoEncoder:
@@ -307,21 +306,21 @@ class NeuralNet:
         self.biases["b2"] = tf.Variable(tf.random_normal([1, self.outputDimensions], mean=0, stddev=math.sqrt(float(6) / float(self.inputDimensions + self.outputDimensions + 1))), name="b2")
 
 
-##############################################################################
-#computational graph
-##############################################################################
+    ##############################################################################
+    #computational graph
+    ##############################################################################
 
     #create feed-forward model
     def feedForward(self, inputX, secondBias):
         #z1
         z1 =    tf.add  (
-                            tf.matmul   (
-                                            inputX,
-                                            self.weights["W1"]
-                                        ),
-                            self.biases["b1"]
-                        ,name="InputToHidden"
-                        )
+                tf.matmul   (
+                        inputX,
+                        self.weights["W1"]
+                ),
+                self.biases["b1"]
+                ,name="InputToHidden"
+        )
 
         #a1
         if self.activationFunction == "sigmoid":
@@ -337,31 +336,39 @@ class NeuralNet:
         #with secondBias?
         if secondBias:
             z2 =    tf.add  (
-                                tf.matmul   (
-                                                a1,
-                                                self.weights["W2"]
-                                            ),
-                                self.biases["b2"]
-                            ,name="HiddenToOutput")
+                    tf.matmul   (
+                            a1,
+                            self.weights["W2"]
+                    ),
+                    self.biases["b2"]
+                    ,name="HiddenToOutput")
 
         else:
             z2 =    tf.matmul   (
-                                    a1,
-                                    self.weights["W2"]
-                                ,name="HiddenToOutput")
+                    a1,
+                    self.weights["W2"]
+                    ,name="HiddenToOutput")
 
 
-        # #a2                                       #don't do this here (handled by cost
-        # a2 = tf.nn.softmax(z2, "Softmax")
-        #
-        # #output
-        # return a2
-        return z2
+        #a2
+        if self.activationFunction == "sigmoid":
+            a2 = tf.nn.sigmoid(z2, name="HiddenActivation")
+        elif self.activationFunction == "tanh":
+            a2 = tf.nn.tanh(z2, name="HiddenActivation")
+        elif self.activationFunction == "relu":
+            a2 = tf.nn.relu(z2, name="HiddenActivation")
+        else:   #default is tanh
+            a2 = tf.nn.tanh(z2, name="HiddenActivation")
 
-##########
+        #output
+        return a2
+        # return z2
+
+    ##########
+    #FOR USE IN AUTOENCODER
 
     #cost
-        #output = feedforward
+    #output = feedforward
     def calculateCost(self, outputOp, labels, isAutoEncoder=False):
         if isAutoEncoder:
             if self.costFunction == "crossEntropy":
@@ -384,27 +391,52 @@ class NeuralNet:
             loss = tf.reduce_mean(crossEntropy, name="Loss")
         return loss
 
-##########
+    ##########
 
     #optimizer
-        #cost = calculateCost
+    #cost = calculateCost
     def train(self, costOp):
+        # return tf.train.GradientDescentOptimizer(self.learningRate).minimize(costOp)
         return tf.train.GradientDescentOptimizer(self.learningRate).minimize(costOp)
 
-##########
+    ##########
+
+    #FOR RANKING STEP
+    #cost
+    #outputCorr = feedforward output of correct
+    #outputIncorr = feedforward output of incorrect
+    def calculateCostDerivs(self, outputCorr, outputIncorr):
+        if 1 - outputCorr + outputIncorr > 0:
+            derivCorr = -1
+            derivIncorr = 1
+        else:
+            derivCorr = 0
+            derivIncorr = 0
+        return derivCorr, derivIncorr
+
+    ##########
+
+    #optimizer
+    #cost = calculateCost
+    def train(self, costOp):
+        # return tf.train.GradientDescentOptimizer(self.learningRate).minimize(costOp)
+        #TODO figure out how to use `apply_gradients` ==> takes as input (gradient, variable) tuples
+        return tf.train.GradientDescentOptimizer(self.learningRate).apply_gradients(costOp)
+
+    ##########
 
     #predict
     def predict(self, feedforwardOp):
         softmax = tf.nn.softmax(feedforwardOp, name="Softmax")
         return softmax
 
-# #############################################################################
-# build ops
-# #############################################################################
+    # #############################################################################
+    # build ops
+    # #############################################################################
 
     def buildComputationGraph(self):
         #feedforward op
-            #secondBias set to True
+        #secondBias set to True
         self.ffOp = self.feedForward(self.input, secondBias=True)
         #costOp
         self.costOp = self.calculateCost(self.ffOp, self.label, isAutoEncoder=True)
@@ -418,15 +450,15 @@ class NeuralNet:
         #initialize variables
         self.session.run(self.init)
 
-# #############################################################################
-# train
-# #############################################################################
+    # #############################################################################
+    # train
+    # #############################################################################
 
     #TODO add code for batch
     #run training
-        #data = (vector, label)
-        #optimizer = trainOp
-        #topN = top 2 vector matches for debugging
+    #data = (vector, label)
+    #optimizer = trainOp
+    #topN = top 2 vector matches for debugging
     def runTraining(self, convergenceValue = .000001, isAutoEncoder=False, topN=1):
 
         #initial average cost
@@ -470,13 +502,13 @@ class NeuralNet:
         print("Training complete.")
 
 
-##########
+    ##########
 
     #get likelihood of a predicate
     def getLikelihood(self, predicate):
         return self.session.run(self.predictOp, feed_dict={self.input: self.getVector(predicate)})
 
-##########
+    ##########
 
     #close session
     def closeSession(self):
