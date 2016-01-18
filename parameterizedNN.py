@@ -47,6 +47,8 @@ sess = tf.Session()
 sess.run(init_op)
 
 #code to test that loop above builds correct sizes
+
+print
 for v in weights.keys():
     print(v + " has a shape of " + str(weights[v].eval(sess).shape))
 
@@ -60,29 +62,28 @@ randomInput = np.random.rand(1,900).astype("float32")
 #create feed-forward architecture in loop
 
 #TODO test
+#code for one layer
+def oneLayer(layerInputX, layerNumber, layerWeightsDict, layerBiasesDict, layerActivation):
+    z = tf.add(
+            tf.matmul(
+                    layerInputX,
+                    layerWeightsDict["W" + str(layerNumber + 1)]),
+            layerBiasesDict["b" + str(layerNumber + 1)],
+            name="Hidden" + str(layerNumber)
+    )
+
+    if layerActivation == "sigmoid":
+        a = tf.nn.sigmoid(z, name="sigmoidActivation" + str(layerNumber))
+    elif layerActivation == "tanh":
+        a = tf.nn.tanh(z, name="tanhActivation" + str(layerNumber))
+    elif layerActivation == "relu":
+        a = tf.nn.relu(z, name="reluActivation" + str(layerNumber))
+    else:       #none
+        a = tf.add(z,0, name="noActivation" + str(layerNumber))      #a hack just to get the node labelled on Tensor Board
+
+    return a
+
 def feedForwardGeneralized(inputX, numberOfLayers, weightsDict, biasesDict, activation):
-    #code for one layer
-    def oneLayer(layerInputX, layerNumber, layerWeightsDict, layerBiasesDict, layerActivation):
-        z = tf.add(
-                    tf.matmul(
-                                layerInputX,
-                                layerWeightsDict["W" + str(layerNumber + 1)]),
-                    layerBiasesDict["b" + str(layerNumber + 1)],
-                    name="Hidden" + str(layerNumber)
-        )
-
-        if layerActivation == "sigmoid":
-            a = tf.nn.sigmoid(z, name="sigmoidActivation" + str(layerNumber))
-        elif layerActivation == "tanh":
-            a = tf.nn.tanh(z, name="tanhActivation" + str(layerNumber))
-        elif layerActivation == "relu":
-            a = tf.nn.relu(z, name="reluActivation" + str(layerNumber))
-        else:       #none
-            a = tf.add(z,0, name="noActivation" + str(layerNumber))      #a hack just to get the node labelled on Tensor Board
-
-        return a
-
-
     #initialize input with original input
     intoLayer = inputX
 
@@ -91,9 +92,9 @@ def feedForwardGeneralized(inputX, numberOfLayers, weightsDict, biasesDict, acti
     for i in range(numberOfLayers):
         if i != numberOfLayers - 1:  #in all cases except output layer
             print "layer " + str(i)
-            intoLayer = oneLayer(input, i, weightsDict, biasesDict, activation)
+            intoLayer = oneLayer(intoLayer, i, weightsDict, biasesDict, activation)
         else:
             print "output layer"
-            intoLayer = oneLayer(input, i, weightsDict, biasesDict, "none")
+            intoLayer = oneLayer(intoLayer, i, weightsDict, biasesDict, "none")
 
     return intoLayer
