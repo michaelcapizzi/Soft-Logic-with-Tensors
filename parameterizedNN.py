@@ -3,6 +3,9 @@ import numpy as np
 import math
 import random
 
+###################
+#global parameters
+###################
 vectorSize = 300
 hiddenLayers = 3
 hiddenDimensions = [10, 5, 3]
@@ -12,21 +15,24 @@ inputDimensions = vectorSize * 3
 activationFunction = "tanh"
 costFunction = "crossEntropy"   #"RMSE"
 
+###################
+#placeholders
+###################
+input = tf.placeholder("float", name="Input", shape=[None, inputDimensions])
+label = tf.placeholder("float", name="Label", shape=[None, outputDimensions])
+
+###################
+#set up variables
+###################
 #add inputDimensions as hiddenLayer[0]
 hiddenDimensions.insert(0, inputDimensions)
 #add outputDimensions as hiddenLayer[+1]
 hiddenDimensions.append(outputDimensions)
 
-#placeholders
-input = tf.placeholder("float", name="Input", shape=[None, inputDimensions])
-label = tf.placeholder("float", name="Label", shape=[None, outputDimensions])
-
-########################################
 #generate variables in loop
 weights = {}
 biases = {}
 
-#confirmed correct code!
 for i in range(len(hiddenDimensions) - 1):    #+1 to treat the output layer as a "hidden layer"
     weights["W{0}".format(i + 1)] = tf.Variable(tf.random_normal(
         [hiddenDimensions[i], hiddenDimensions[i + 1]],     #hidden[i] x hidden[i + 1]
@@ -41,24 +47,28 @@ for i in range(len(hiddenDimensions) - 1):    #+1 to treat the output layer as a
         name="b" + str(i+1)
     )
 
+########################################
+
 #code to set up evaluation of variables
-init_op = tf.initialize_all_variables()
-sess = tf.Session()
-sess.run(init_op)
+# init_op = tf.initialize_all_variables()
+# sess = tf.Session()
+# sess.run(init_op)
 
 #code to test that loop above builds correct sizes
 
-print
-for v in weights.keys():
-    print(v + " has a shape of " + str(weights[v].eval(sess).shape))
-
-for b in biases.keys():
-    print(b + " has a shape of " + str(biases[b].eval(sess).shape))
+# for v in weights.keys():
+#     print(v + " has a shape of " + str(weights[v].eval(sess).shape))
+#
+# for b in biases.keys():
+#     print(b + " has a shape of " + str(biases[b].eval(sess).shape))
 
 ########################################
 
 randomInput = np.random.rand(1,900).astype("float32")
 
+###################
+#set up layers
+###################
 #create feed-forward architecture in loop
 
 #TODO test
@@ -93,7 +103,7 @@ def oneLayer(layerInputX, layerNumber, layerWeightsDict, layerBiasesDict, layerA
     return a
 
 
-#for multiple layers
+#code for multiple layers
 def feedForwardGeneralized(inputX, numberOfLayers, weightsDict, biasesDict, activation):
     #initialize input with original input
     intoLayer = inputX
@@ -109,3 +119,83 @@ def feedForwardGeneralized(inputX, numberOfLayers, weightsDict, biasesDict, acti
             intoLayer = oneLayer(intoLayer, i, weightsDict, biasesDict, "none")
 
     return intoLayer
+
+
+###################
+#remaining logistics
+###################
+def initializeVars():
+    return tf.initialize_all_variables().run()
+
+
+#create optimizer
+def createOptimizer(learningRate, opToMinimize):
+    return tf.train.GradientDescentOptimizer(learningRate).minimize(opToMinimize)
+
+
+###################
+#accuracy op
+###################
+
+#creates accuracy op
+def createAccuracyOp(predictOp, labelPlaceholder):
+    correct_prediction = tf.equal(tf.argmax(predictOp, 1), tf.argmax(labelPlaceholder, 1))
+    accuracy = tf.reduce_mean(tf.cast(correct_prediction, "float"))
+    accuracy_summary = tf.scalar_summary("accuracy", accuracy)
+    return correct_prediction, accuracy, accuracy_summary
+
+
+###################
+#set up summaries
+###################
+
+#creates summary for a value
+    #see https://www.tensorflow.org/versions/master/how_tos/summaries_and_tensorboard/index.html
+    #name = name of summary
+    #tensor = tensor to capture in summary
+    #type = summary type
+def createSummary(name, tensor, type):
+    if type == "scalar":
+        return tf.scalar_summary(name, tensor)
+    elif type == "histogram":
+        return tf.histogram_summary(name, tensor)
+    else: #default to "scalar"
+        return tf.scalar_summary(name, tensor)
+
+
+#if you make a summary for each node
+def mergeAllSummaries():
+    return tf.merge_all_summaries()
+
+
+#creates a summary writer to use
+def createSummaryWriter(logLocation, includeGraph_def=True):
+    return tf.train.SummaryWriter(logLocation, includeGraph_def)
+
+
+###################
+#training
+###################
+
+#train
+    #tf.Session
+    #merged op
+    #feed_dict
+    ## of epochs
+    #summary writer
+    #how often to report summary
+def train(data, tfSession, mergedOp, accuracyOp, optimizer, trainFeed, testFeed, writer, summaryStep):
+    for i in range(len(data)):
+        if i % summaryStep == 0: #record summary data and current accuracy
+            result = tfSession.run([mergedOp, accuracyOp], feed_dict=testFeed)
+            summaryString = result[0]
+            accuracyReport = result[1]
+            writer.add_summary(summaryString, i)
+            print("accuracy at step %s: %s" %(i, accuracyReport))
+        else:   #continue training as normal
+            tfSession.run(optimizer, feed=trainFeed)
+    #print final accuracy
+    print(accuracyOp.eval(testFeed))
+
+
+

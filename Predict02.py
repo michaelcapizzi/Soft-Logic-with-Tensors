@@ -20,7 +20,7 @@ print ("finished loading word2vec")
 #10 training epochs
 #tanh activation
 #cross_entropy loss
-testNN = nn.NeuralNet(embeddingClass=w2v, vectorSize=w2v.getVectorSize(),hiddenNodes=300, outputNodes=2, trainingEpochs=10, activationFunction="relu", costFunction="crossEntropy", learningRate=None)
+testNN = nn.NeuralNet(embeddingClass=w2v, vectorSize=w2v.getVectorSize(),hiddenNodes=300, outputNodes=2, trainingEpochs=10, activationFunction="tanh", costFunction="crossEntropy", learningRate=None)
 
 
 #loading true predicates
@@ -53,10 +53,11 @@ testNN.biases["b2"] = tf.Variable(tf.zeros([1, testNN.outputDimensions]))
 #then override with saved parameters
 # testNN.loadVariables("Variables/variables_NN_tanh-crossEntropy-decayedLR-10itersTEST")
 #otherwise load each separately
-testNN.loadVariables("Variables/variables_NN_tanh-crossEntropy-decayedLR-10iters", variableName="Variable", targetName=testNN.weights["W1"])    #W1 = Variable
-testNN.loadVariables("Variables/variables_NN_tanh-crossEntropy-decayedLR-10iters", variableName="W2", targetName=testNN.weights["W2"])
-testNN.loadVariables("Variables/variables_NN_tanh-crossEntropy-decayedLR-10iters", variableName="Variable_1", targetName=testNN.biases["b1"])    #b1 = Variable_1
-testNN.loadVariables("Variables/variables_NN_tanh-crossEntropy-decayedLR-10iters", variableName="b2", targetName=testNN.biases["b2"])
+# testNN.loadVariables("Variables/variables_NN_tanh-crossEntropy-decayedLR-10iters", variableName="Variable", targetName=testNN.weights["W1"])    #W1 = Variable
+testNN.loadVariables("Variables/variables_NN_300-tanh-crossEntropy-decayedLR-10iters", variableName="Variable", targetName=testNN.weights["W1"])    #W1 = Variable
+testNN.loadVariables("Variables/variables_NN_300-tanh-crossEntropy-decayedLR-10iters", variableName="W2", targetName=testNN.weights["W2"])
+testNN.loadVariables("Variables/variables_NN_300-tanh-crossEntropy-decayedLR-10iters", variableName="Variable_1", targetName=testNN.biases["b1"])    #b1 = Variable_1
+testNN.loadVariables("Variables/variables_NN_300-tanh-crossEntropy-decayedLR-10iters", variableName="b2", targetName=testNN.biases["b2"])
 
 
 
@@ -66,5 +67,5 @@ testNN.buildComputationGraph()
 
 
 #ready to predict
-#testNN.getLikelihood(predicate)
+# testNN.getLikelihood(predicate)
 
