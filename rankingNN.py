@@ -126,7 +126,13 @@ def feedForwardGeneralized(inputX, numberOfLayers, weightsDict, biasesDict, acti
 
     return intoLayer
 
+
+#must make one ffOp for positives
+#must make another ffOp for negatives
+
 #code for cost function
+def rankingCost(positiveFF, negativeFF):
+    return tf.maximum(0.0, 1 - positiveFF + negativeFF)
 
 ###################
 #remaining logistics
@@ -135,9 +141,10 @@ def initializeVars():
     return tf.initialize_all_variables().run()
 
 
+
 #create optimizer
 def createOptimizer(learningRate, opToMinimize):
-    # return tf.train.GradientDescentOptimizer(learningRate).minimize(opToMinimize)
+    return tf.train.GradientDescentOptimizer(learningRate).minimize(opToMinimize)
 #we need to use apply_gradients after manually determining the gradient of each variable in tuple of (gradientValue, variable)
     # for v in defaultGraph.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES):
     #     (v, [gradient])
