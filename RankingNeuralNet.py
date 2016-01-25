@@ -59,11 +59,13 @@ class RankingNeuralNet:
         #parameters
         self.weights =  {}
         self.biases =   {}
-        self.input = tf.placeholder("float", name="Input", shape=[None, self.inputDimensions])
-        self.label = tf.placeholder("float", name="LabelDistribution", shape=[None, outputNodes])
+        self.positiveInput = tf.placeholder("float", name="posInput", shape=[None, self.inputDimensions])
+        self.negativeInput = tf.placeholder("float", name="negInput", shape=[None, self.inputDimensions])
+        self.label = tf.placeholder("float", name="trueProb", shape=[None, outputNodes])
         #computation graph
         self.init = tf.initialize_all_variables()           #TODO must be done manually ???
-        self.ffOp = None
+        self.ffPosOp = None
+        self.ffNegOp = None
         self.costOp = None
         self.gradientOp = None
         self.predictOp = None
@@ -393,41 +395,36 @@ class RankingNeuralNet:
 
     ##########
 
+    #FOR RANKING STEP
+    #cost
+    #outputCorr = feedforward output of correct
+    #outputIncorr = feedforward output of incorrect
+    def rankingCost(self, outputCorr, outputIncorr):
+        return tf.maximum(0.0, 1 - outputCorr + outputIncorr)
+
+    ##########
+
     #optimizer
     #cost = calculateCost
     def train(self, costOp):
         # return tf.train.GradientDescentOptimizer(self.learningRate).minimize(costOp)
         return tf.train.GradientDescentOptimizer(self.learningRate).minimize(costOp)
 
-    ##########
 
-    #FOR RANKING STEP
-    #cost
-    #outputCorr = feedforward output of correct
-    #outputIncorr = feedforward output of incorrect
-    def calculateCostDerivs(self, outputCorr, outputIncorr):
-        if 1 - outputCorr + outputIncorr > 0:
-            derivCorr = -1
-            derivIncorr = 1
-        else:
-            derivCorr = 0
-            derivIncorr = 0
-        return derivCorr, derivIncorr
-
-    ##########
 
     #optimizer
     #cost = calculateCost
-    def train(self, costOp):
-        # return tf.train.GradientDescentOptimizer(self.learningRate).minimize(costOp)
-        #TODO figure out how to use `apply_gradients` ==> takes as input (gradient, variable) tuples
-        return tf.train.GradientDescentOptimizer(self.learningRate).apply_gradients(costOp)
-
-    ##########
+    # def train(self, costOp):
+    #     # return tf.train.GradientDescentOptimizer(self.learningRate).minimize(costOp)
+    #     #TODO figure out how to use `apply_gradients` ==> takes as input (gradient, variable) tuples
+    #     return tf.train.GradientDescentOptimizer(self.learningRate).apply_gradients(costOp)
+    #
+    # ##########
 
     #predict
     def predict(self, feedforwardOp):
-        softmax = tf.nn.softmax(feedforwardOp, name="Softmax")
+        # softmax = tf.nn.softmax(feedforwardOp, name="Softmax")
+        softmax = tf.nn.tanh(feedforwardOp, name="TanhOutput")
         return softmax
 
     # #############################################################################
@@ -437,13 +434,14 @@ class RankingNeuralNet:
     def buildComputationGraph(self):
         #feedforward op
         #secondBias set to True
-        self.ffOp = self.feedForward(self.input, secondBias=True)
+        self.ffPosOp = self.feedForward(self.positiveInput, secondBias=True)
+        self.ffNegOp = self.feedForward(self.negativeInput, secondBias=True)
         #costOp
-        self.costOp = self.calculateCost(self.ffOp, self.label, isAutoEncoder=True)
-        #gradientOp
+        # self.costOp = self.calculateCost(self.ffOp, self.label, isAutoEncoder=True)
+        self.costOp = self.rankingCost(self.ffPosOp, self.ffNegOp)
         self.gradientOp = self.train(self.costOp)
         #predictOp
-        self.predictOp = self.predict(self.ffOp)
+        self.predictOp = self.predict(self.ffPosOp)
 
 
     def initializeVariables(self):
@@ -466,39 +464,42 @@ class RankingNeuralNet:
         #training epoch
         for epoch in range(self.trainingEpochs):
             #stochastic gradient descent
-            for i in range(len(self.allPredicates)):
+            for i in range(len(self.predicates)):
                 #run gradient step
                 #the predicate to be fed in
-                pred = self.allPredicates[i]
+                posPred = self.predicates[i]
+                negPred = self.negPredicates[i]
                 #the vector for that predicate
-                vector = self.getVector(pred)
+                posVector = self.getVector(posPred)
+                negVector = self.getVector(negPred)
                 #reshape vector
                 # vector = vector.reshape((1,vector.shape[0]))
                 #training step
                 if isAutoEncoder:
                     self.session.run(self.gradientOp, feed_dict={self.input: vector, self.label: vector})
                 else:
-                    self.session.run(self.gradientOp, feed_dict={self.input: vector, self.label: self.predLabels[i]})
+                    self.session.run(self.gradientOp, feed_dict={self.positiveInput: posVector, self.negativeInput: negVector})
                 #compute average cost
-                if isAutoEncoder:
-                    newCost = self.session.run(self.costOp, feed_dict={self.input: vector, self.label: vector})
-                else:
-                    newCost = self.session.run(self.costOp, feed_dict={self.input: vector, self.label: self.predLabels[i]})
-                #calculate diff from previous iteration
-                diff = avgCost - newCost
-                avgCost = newCost
-                #debugging
+                # if isAutoEncoder:
+                #     newCost = self.session.run(self.costOp, feed_dict={self.input: vector, self.label: vector})
+                # else:
+                #     newCost = self.session.run(self.costOp, feed_dict={self.input: vector, self.label: self.predLabels[i]})
+                # #calculate diff from previous iteration
+                # diff = avgCost - newCost
+                # avgCost = newCost
+                # #debugging
                 if (i + epoch) % 500 == 0:              #will ensure that different predicates appear for debugging at each iteration
-                    print("predicate in: ", pred)
-                    if isAutoEncoder:
-                        print("predicate out: ", self.getClosestPredicate(self.session.run(self.ffOp, feed_dict={self.input: vector}).reshape((600,)),topN, True))
-                    else:
-                        print("label out: ", self.session.run(self.predictOp, feed_dict={self.input: vector}))
-                    print("iteration %s, training instance %s: with average cost of %s and diff of %s" %(str(epoch+1), str(i + 1), str(avgCost), str(diff)))
-                #determine if convergence -- ensure after first full iteration of data
-                if epoch > 0 and abs(diff) < convergenceValue:
-                    print("Convergence at iteration %s, training instance %s" %(str(epoch+1), str(i+1)))
-                    break
+                    print("positive predicate in: ", posPred)
+                    print("negative predicate in: ", negPred)
+                    # if isAutoEncoder:
+                    #     print("predicate out: ", self.getClosestPredicate(self.session.run(self.ffOp, feed_dict={self.input: vector}).reshape((600,)),topN, True))
+                    # else:
+                    #     print("label out: ", self.session.run(self.predictOp, feed_dict={self.input: vector}))
+                #     print("iteration %s, training instance %s: with average cost of %s and diff of %s" %(str(epoch+1), str(i + 1), str(avgCost), str(diff)))
+                # #determine if convergence -- ensure after first full iteration of data
+                # if epoch > 0 and abs(diff) < convergenceValue:
+                #     print("Convergence at iteration %s, training instance %s" %(str(epoch+1), str(i+1)))
+                #     break
         print("Training complete.")
 
 
