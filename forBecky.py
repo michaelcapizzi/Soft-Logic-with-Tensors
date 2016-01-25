@@ -28,10 +28,13 @@ if __name__ == "__main__":
     skippedList = []
 
     #get predicates for Becky
-    f = open("/media/mcapizzi/data/nvn-tuples.txt", "r")
+    # f = open("/media/mcapizzi/data/nvn-tuples.txt", "r")
+    f = open("nvn-tuples.txt", "r")
 
-    fKeep = open("/media/mcapizzi/data/nvn-tuplesKeep.txt", "w")
-    fSkipped = open("/media/mcapizzi/data/nvn-tuplesSkipped.txt", "w")
+    # fKeep = open("/media/mcapizzi/data/nvn-tuplesKeep.txt", "w")
+    fKeep = open("nvn-tuplesKeep.txt", "w")
+    # fSkipped = open("/media/mcapizzi/data/nvn-tuplesSkipped.txt", "w")
+    fSkipped = open("nvn-tuplesSkipped.txt", "w")
     fKeep.close()
     fSkipped.close()
 
@@ -46,13 +49,15 @@ if __name__ == "__main__":
         match1 = re.search(r'\W', sentenceTuple[1])
         match2 = re.search(r'\W', sentenceTuple[2])
         if match0 or match1 or match2:
-            fSkipped = open("/media/mcapizzi/data/nvn-tuplesSkipped.txt", "a")
+            # fSkipped = open("/media/mcapizzi/data/nvn-tuplesSkipped.txt", "a")
+            fSkipped = open("nvn-tuplesSkipped.txt", "a")
             # print "skipping %s" %(str(sentenceTuple))
             skippedList.append(sentenceTuple)
             fSkipped.write(sentenceTuple[0] + " " + sentenceTuple[1] + " " + sentenceTuple[2] + "\n")
             fSkipped.close()
         elif p.testNN.getVector(sentenceTuple) is None:
-            fSkipped = open("/media/mcapizzi/data/nvn-tuplesSkipped.txt", "a")
+            # fSkipped = open("/media/mcapizzi/data/nvn-tuplesSkipped.txt", "a")
+            fSkipped = open("nvn-tuplesSkipped.txt", "a")
             # print "skipping %s" %(str(sentenceTuple))
             skippedList.append(sentenceTuple)
             fSkipped.write(sentenceTuple[0] + " " + sentenceTuple[1] + " " + sentenceTuple[2] + "\n")
@@ -60,7 +65,8 @@ if __name__ == "__main__":
         else:
             # print str(sentenceTuple)
             score = p.testNN.getLikelihood(sentenceTuple)[0][0]
-            fKeep = open("/media/mcapizzi/data/nvn-tuplesKeep.txt", "a")
+            # fKeep = open("/media/mcapizzi/data/nvn-tuplesKeep.txt", "a")
+            fKeep = open("nvn-tuplesKeep.txt", "a")
             fKeep.write(sentenceTuple[0] + " " + sentenceTuple[1] + " " + sentenceTuple[2] + "\t" + str(score) + "\n")
             fKeep.close()
             # print "scoring %s: %s" %(str(sentenceTuple), str(score))
@@ -70,7 +76,8 @@ if __name__ == "__main__":
 
     f.close()
 
-    fSorted = open("/media/mcapizzi/data/nvn-tuplesSorted.txt", "w")
+    # fSorted = open("/media/mcapizzi/data/nvn-tuplesSorted.txt", "w")
+    fSorted = open("nvn-tuplesSorted.txt", "w")
     # f2 = open("/media/mcapizzi/data/nvn-tuplesSkipped.txt", "w")
     #
     # print "writing skippedList"
