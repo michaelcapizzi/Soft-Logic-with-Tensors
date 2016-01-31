@@ -7,7 +7,6 @@ import math
 import random
 
 #TODO add penalty term to RMSE cost function
-#TODO determine convergence method -- perhaps use separate steps for gradient
 #https://www.tensorflow.org/versions/master/api_docs/python/train.html#Optimizer.minimize
 
 
@@ -23,21 +22,16 @@ class RankingNeuralNet:
         :param outputDimensions --> in this case will be 1
         :param hiddenNodes
         :param activationFunction
-        :param costFunction
         :param hiddenNodes ==> number of nodes in a single hidden layer
         tensorflow documentation ==> https://www.tensorflow.org/versions/master/api_docs/python/index.html
     """
-    def __init__(self, embeddingClass, vectorSize, hiddenNodes, outputNodes, trainingEpochs, activationFunction, costFunction="crossEntropy", batchSize=None, learningRate=.001):
+    def __init__(self, embeddingClass, vectorSize, hiddenNodes, outputNodes, trainingEpochs, activationFunction, batchSize=None, learningRate=.001):
         self.embeddingClass = embeddingClass
         self.vectorSize = vectorSize
         #textual data
         self.predicates = None
         self.negPredicates = None
-        # self.allPredicates = []
-        # self.predLabels = []
-        # self.skippedPredicates = []     #for predicates who have no vectors
-        #NN input and label data
-        # self.predVectors = []           #only used to batch convert predicates
+        self.allPredicates = None
         #hyperparameters
         if not learningRate:            #if no learning rate is set, use exponential_decay
             self.learningRate = tf.train.exponential_decay(
@@ -55,46 +49,32 @@ class RankingNeuralNet:
         self.outputDimensions = outputNodes
         self.hiddenNodes = hiddenNodes
         self.activationFunction = activationFunction
-        self.costFunction = costFunction
         #parameters
         self.weights =  {}
         self.biases =   {}
         self.positiveInput = tf.placeholder("float", name="posInput", shape=[None, self.inputDimensions])
         self.negativeInput = tf.placeholder("float", name="negInput", shape=[None, self.inputDimensions])
-        self.aePlaceholder = tf.placeholder("float", name="aeInput", shape=[None, self.inputDimensions])            #placeholder only to be used by autoencoder
+        self.aePlaceholderIn = tf.placeholder("float", name="aeInput", shape=[None, self.inputDimensions])            #placeholder only to be used by autoencoder
+        self.aePlaceholderOut = tf.placeholder("float", name="aeOutput", shape=[None, self.inputDimensions])            #placeholder only to be used by autoencoder
         #computation graph
         self.init = tf.initialize_all_variables()           #TODO must be done manually ???
         self.ffPosOp = None
         self.ffNegOp = None
         self.costOp = None
-        #TODO this can't be done here.  must be done later?
-        # self.costSummary = tf.scalar_summary("cost", self.costOp)
+        self.costSummary = None
         self.gradientOp = None
+        self.gradientSummary = None
         self.predictOp = None
+        self.allSummaryOps = None
         #Tensorflow session
         self.session = tf.Session()
+        #summary writer
+        self.writer = tf.train.SummaryWriter("summary_logs", self.session.graph_def)
 
 
     ##############################################################################
     #utils
     ##############################################################################
-
-    # #pickle thing
-    # def pickle(self, thing, fname):
-    #     f = open(fname + ".pickle", "wb")
-    #     pickle.dump(thing, f)
-    #     f.close()
-    #
-    # #TODO remove or fix - doesn't work
-    # #unpickle thing
-    # def unpickle(self, fname):
-    #     f = open(fname + ".pickle", "rb")
-    #     thing = pickle.load(fname)
-    #     f.close()
-    #     #return thing
-    #     return thing
-    #
-    # ########
 
     #TODO fix or dump -- doesn't work
     #load embeddings
@@ -124,13 +104,12 @@ class RankingNeuralNet:
 
 
     # #build allPredicates plus labels
-    def buildDataset(self):
+    def buildDatasetAE(self):
         labeledPos = [(pp, np.array([[1,0]])) for pp in self.predicates]
         labeledNeg = [(pn, np.array([[0,1]])) for pn in self.negPredicates]
         allPreds = labeledPos + labeledNeg
         random.shuffle(allPreds)
         self.allPredicates = map(lambda x: x[0], allPreds)
-        self.predLabels = map(lambda x: x[1], allPreds)
 
 
     #generate vector for a given predicate
@@ -187,50 +166,6 @@ class RankingNeuralNet:
         return predsToKeep
 
 
-
-        #generate vectors for all predicates in NeuralNet class
-        # def getVectors(self):
-        #     for predicate in self.predicates:
-        #         #deconstruct copulars
-        #         if "_" in predicate[1]:
-        #             predPortion = predicate[1][3:]
-        #             predicate = (predicate[0], "is", predPortion)
-        #
-        #         if predicate[0]:
-        #         #if the uppercase exists
-        #             capture = self.embeddingClass.getVector(predicate[0])
-        #             if capture is not None:
-        #                 subjectWord = capture
-        #             #back off to trying lowercase
-        #             else:
-        #                 subjectWord = self.embeddingClass.getVector(predicate[0].lower())
-        #         else:
-        #             subjectWord = None
-        #         if predicate[1]:
-        #             #if the uppercase exists
-        #             capture = self.embeddingClass.getVector(predicate[1])
-        #             if capture is not None:
-        #                 verbWord = capture
-        #             #back off to trying lowercase
-        #             else:
-        #                 verbWord = self.embeddingClass.getVector(predicate[1].lower())
-        #         else:
-        #             verbWord = None
-        #         if predicate[2]:
-        #             #if the uppercase exists
-        #             capture = self.embeddingClass.getVector(predicate[2])
-        #             if capture is not None:
-        #                 objectWord = capture
-        #             #back off to trying lowercase
-        #             else:
-        #                 objectWord = self.embeddingClass.getVector(predicate[2].lower())
-        #                 if objectWord is None:
-        #                     objectWord = np.zeros(self.vectorSize)
-        #         else:
-        #             objectWord = np.zeros(self.vectorSize)
-        #         if subjectWord is not None and verbWord is not None:
-        #             v = np.concatenate((subjectWord, verbWord, objectWord))
-        #             self.predVectors.append(v)
 
     ########
 
@@ -292,9 +227,9 @@ class RankingNeuralNet:
         for i in range(staticW1.shape[1]):
             return self.getClosestPredicate(staticW1[:,i].reshape((staticW1.shape[0],)), 1, makeNone=False)
 
-        ##############################################################################
-        #variable setup
-        ##############################################################################
+    ##############################################################################
+    #variable setup
+    ##############################################################################
 
     #initialize weights
     def initializeParameters(self, useAutoEncoder=False, existingW1=None, existingB1=None):
@@ -313,6 +248,8 @@ class RankingNeuralNet:
     ##############################################################################
     #computational graph
     ##############################################################################
+
+    #TODO replace with generalized methods
 
     #create feed-forward model
     def feedForward(self, inputX, secondBias):
@@ -356,161 +293,151 @@ class RankingNeuralNet:
 
         #a2
         if self.activationFunction == "sigmoid":
-            a2 = tf.nn.sigmoid(z2, name="HiddenActivation")
+            a2 = tf.nn.sigmoid(z2, name="OutputActivation")
         elif self.activationFunction == "tanh":
-            a2 = tf.nn.tanh(z2, name="HiddenActivation")
+            a2 = tf.nn.tanh(z2, name="OutputActivation")
         elif self.activationFunction == "relu":
-            a2 = tf.nn.relu(z2, name="HiddenActivation")
+            a2 = tf.nn.relu(z2, name="OutputActivation")
         else:   #default is tanh
-            a2 = tf.nn.tanh(z2, name="HiddenActivation")
+            a2 = tf.nn.tanh(z2, name="OutputActivation")
 
         #output
         return a2
         # return z2
 
     ##########
-    #FOR USE IN AUTOENCODER
-
     #cost
-    #output = feedforward
-    def calculateCost(self, outputOp, labels, isAutoEncoder=False):
-        if isAutoEncoder:
-            if self.costFunction == "crossEntropy":
-                crossEntropy = tf.nn.sigmoid_cross_entropy_with_logits(outputOp, labels, name="CrossEntropy")
-                loss = tf.reduce_mean(crossEntropy, name="Loss")
-            else:
-                squaredError = tf.nn.l2_loss(outputOp - labels, name="SquaredError")
-                # squaredError = tf.pow(outputOp - labels, 2, name="SquaredError")
-                # squaredError = tf.add(
-                #                         tf.nn.l2_loss(outputOp - labels, name="SquaredError")
-                #                         tf.add  (
-                #                                 self.weights["W1"].eval(session=self.session).sum(),
-                #                                 self.weights["W2"].eval(session=self.session).sum()
-                #                                 ),
-                #                         name="RegularizationTerm")
-                #TODO what does reduce_mean do here when `squaredError` is already a scalar?
-                loss = tf.reduce_mean(squaredError, name="Loss")
-        else:
-            crossEntropy = tf.nn.softmax_cross_entropy_with_logits(outputOp, labels, name="CrossEntropy")
-            loss = tf.reduce_mean(crossEntropy, name="Loss")
+
+    #FOR USE IN AUTOENCODER
+        #output = feedforward
+    def calculateCostAE(self, outputOp, labels):
+        squaredError = tf.nn.l2_loss(outputOp - labels, name="SquaredError")
+        #TODO what does reduce_mean do here when `squaredError` is already a scalar?
+        loss = tf.reduce_mean(squaredError, name="Loss")
         return loss
 
     ##########
 
     #FOR RANKING STEP
-    #cost
-    #outputCorr = feedforward output of correct
-    #outputIncorr = feedforward output of incorrect
-    def rankingCost(self, outputCorr, outputIncorr):
-        return tf.maximum(0.0, 1 - outputCorr + outputIncorr)
+        #outputCorr = feedforward output of correct
+        #outputIncorr = feedforward output of incorrect
+    def calculateCostRanking(self, outputCorr, outputIncorr):
+        return tf.maximum(0.0, 1 - outputCorr + outputIncorr, name="RankingCost")
 
     ##########
 
     #optimizer
     #cost = calculateCost
     def train(self, costOp):
-        # return tf.train.GradientDescentOptimizer(self.learningRate).minimize(costOp)
         return tf.train.GradientDescentOptimizer(self.learningRate).minimize(costOp)
 
-
-
-    #optimizer
-    #cost = calculateCost
-    # def train(self, costOp):
-    #     # return tf.train.GradientDescentOptimizer(self.learningRate).minimize(costOp)
-    #     #TODO figure out how to use `apply_gradients` ==> takes as input (gradient, variable) tuples
-    #     return tf.train.GradientDescentOptimizer(self.learningRate).apply_gradients(costOp)
-    #
-    # ##########
+    ##########
 
     #predict
-    def predict(self, feedforwardOp):
-        # softmax = tf.nn.softmax(feedforwardOp, name="Softmax")
-        sigmoid = tf.nn.sigmoid(feedforwardOp, name="SigmoidOutput")
-        # return softmax
-        return sigmoid
+        #returns likelihood of True
+    def predict(self, feedForwardOp):
+        return feedForwardOp
 
-    # #############################################################################
-    # build ops
-    # #############################################################################
+    ############################################################################
+    #build ops
+    ############################################################################
 
-    def buildComputationGraph(self):
-        #feedforward op
-        #secondBias set to True
-        self.ffPosOp = self.feedForward(self.positiveInput, secondBias=True)
-        self.ffNegOp = self.feedForward(self.negativeInput, secondBias=True)
-        #costOp
-        # self.costOp = self.calculateCost(self.ffOp, self.label, isAutoEncoder=True)
-        self.costOp = self.rankingCost(self.ffPosOp, self.ffNegOp)
-        self.gradientOp = self.train(self.costOp)
-        #predictOp
-        self.predictOp = self.predict(self.ffPosOp)
+    def buildComputationGraph(self, isAutoEncoder=False):
+        if isAutoEncoder:
+            #feedforward op
+            self.ffPosOp = self.feedForward(self.aePlaceholder, secondBias=True)
+            #cost op
+            self.costOp = self.calculateCostAE(self.ffPosOp, self.aePlaceholder)
+            self.costSummary = tf.histogram_summary("costAE", self.costOp)
+            #gradient op
+            self.gradientOp = self.train(self.costOp)
+            #predict op
+            self.predictOp = self.predict(self.ffPosOp)
+            self.allSummaryOps = tf.merge_all_summaries()
+        else:
+            self.ffPosOp = self.feedForward(self.positiveInput, secondBias=True)
+            self.ffNegOp = self.feedForward(self.negativeInput, secondBias=True)
+            #costOp
+            self.costOp = self.calculateCostRanking(self.ffPosOp, self.ffNegOp)
+            self.costSummary = tf.scalar_summary("cost", self.costOp)
+            #gradient op
+            self.gradientOp = self.train(self.costOp)
+            #predictOp
+            self.predictOp = self.predict(self.ffPosOp)
+            self.allSummaryOps = tf.merge_all_summaries()
 
 
+    #TODO confirm this must be done manually
     def initializeVariables(self):
         #initialize variables
         self.session.run(self.init)
 
-    # #############################################################################
-    # train
-    # #############################################################################
+    #############################################################################
+    #train
+    #############################################################################
 
     #TODO add code for batch
     #run training
-    #data = (vector, label)
-    #optimizer = trainOp
-    #topN = top 2 vector matches for debugging
     def runTraining(self, convergenceValue = .000001, isAutoEncoder=False, topN=1):
 
-        #initial average cost
-        avgCost = 0
-
-        #initialize writer
-        writer = tf.train.SummaryWriter("summary_logs", self.session.graph_def)
-
-        #training epoch
-        for epoch in range(self.trainingEpochs):
-            #stochastic gradient descent
-            for i in range(len(self.predicates)):
-                #run gradient step
-                #the predicate to be fed in
-                posPred = self.predicates[i]
-                negPred = self.negPredicates[i]
-                #the vector for that predicate
-                posVector = self.getVector(posPred)
-                negVector = self.getVector(negPred)
-                #reshape vector
-                # vector = vector.reshape((1,vector.shape[0]))
-                #training step
-                #TODO how to do autoencoder when two predicates have come through?  Make its own method?
-                if isAutoEncoder:
-                    self.session.run(self.gradientOp, feed_dict={self.input: vector, self.label: vector})
-                else:
+        if not isAutoEncoder:
+            #training epoch
+            for epoch in range(self.trainingEpochs):
+                #stochastic gradient descent
+                for i in range(len(self.predicates)):
+                    #run gradient step
+                    #the predicate to be fed in
+                    posPred = self.predicates[i]
+                    negPred = self.negPredicates[i]
+                    #the vector for that predicate
+                    posVector = self.getVector(posPred)
+                    negVector = self.getVector(negPred)
+                    #reshape vector
+                    # vector = vector.reshape((1,vector.shape[0]))
+                    #training step
                     self.session.run(self.gradientOp, feed_dict={self.positiveInput: posVector, self.negativeInput: negVector})
-                #compute average cost
-                # if isAutoEncoder:
-                #     newCost = self.session.run(self.costOp, feed_dict={self.input: vector, self.label: vector})
-                # else:
-                #     newCost = self.session.run(self.costOp, feed_dict={self.input: vector, self.label: self.predLabels[i]})
-                # #calculate diff from previous iteration
-                # diff = avgCost - newCost
-                # avgCost = newCost
-                # #debugging
-                if (i + epoch) % 500 == 0:              #will ensure that different predicates appear for debugging at each iteration
-                    print("positive predicate in: ", posPred)
-                    print("negative predicate in: ", negPred)
-                    #write to summary
-                    writer.add_summary(self.costSummary, i)
+                    #occasional reporting to summary and STDOUT
+                    if (i + epoch) % 1000 == 0:              #will ensure that different predicates appear for debugging at each iteration
+                        # summ, cost = self.session.run([self.allSummaryOps, self.costOp], feed_dict = {self.positiveInput: posVector, self.negativeInput: negVector})
+                        cost = self.session.run([self.costOp], feed_dict = {self.positiveInput: posVector, self.negativeInput: negVector})
+                        pos = self.session.run(self.ffPosOp, feed_dict={self.positiveInput: posVector})
+                        neg = self.session.run(self.ffNegOp, feed_dict={self.negativeInput: negVector})
+                        print("positive predicate in: ", posPred)
+                        print("feedforward output of positive: ", pos)
+                        print("negative predicate in: ", negPred)
+                        print("feedforward output of negative: ", neg)
+                        print("cost should be: %s" %str(1 - pos - neg))
+                        print("tf output for cost: %s" %str(cost))
+                        #write to summary
+                        # self.writer.add_summary(summ, i)
+        else:
+        #initial average cost
+            avgCost = 0
+            #training epoch
+            for epoch in range(self.trainingEpochs):
+                #stochastic gradient descent
+                for i in range(len(self.allPredicates)):
+                    #run gradient step
+                    #the predicate to be fed in
+                    pred = self.allPredicates[i]
+                    #the vector for that predicate
+                    vector = self.getVector(pred)
+                    #reshape vector
+                    # vector = vector.reshape((1,vector.shape[0]))
+                    #training step
+                    self.session.run(self.gradientOp, feed_dict={self.aePlaceholderIn: vector, self.aePlaceholderOut: vector})
+                    #calculate diff from previous iteration
+                    if (i + epoch) % 1000 == 0:
+                        newCost = self.session.run(self.costOp, feed_dict={self.aePlaceholderIn: vector, self.aePlaceholderOut: vector})
+                        diff = avgCost - newCost
+                        avgCost = newCost
+                        print("predicate in: ", pred)
+                        print("predicate out: ", self.getClosestPredicate(self.session.run(self.ffPosOp, feed_dict={self.positiveInput: vector}).reshape((600,)),topN, True))
+                        print("iteration %s, training instance %s: with average cost of %s and diff of %s" %(str(epoch+1), str(i + 1), str(avgCost), str(diff)))
+                    if epoch > 0 and abs(diff) < convergenceValue:
+                        print("Convergence at iteration %s, training instance %s" %(str(epoch+1), str(i+1)))
+                        break
 
-                    # if isAutoEncoder:
-                    #     print("predicate out: ", self.getClosestPredicate(self.session.run(self.ffOp, feed_dict={self.input: vector}).reshape((600,)),topN, True))
-                    # else:
-                    #     print("label out: ", self.session.run(self.predictOp, feed_dict={self.input: vector}))
-                #     print("iteration %s, training instance %s: with average cost of %s and diff of %s" %(str(epoch+1), str(i + 1), str(avgCost), str(diff)))
-                # #determine if convergence -- ensure after first full iteration of data
-                # if epoch > 0 and abs(diff) < convergenceValue:
-                #     print("Convergence at iteration %s, training instance %s" %(str(epoch+1), str(i+1)))
-                #     break
         print("Training complete.")
 
 
@@ -518,7 +445,7 @@ class RankingNeuralNet:
 
     #get likelihood of a predicate
     def getLikelihood(self, predicate):
-        return self.session.run(self.predictOp, feed_dict={self.input: self.getVector(predicate)})
+        return self.session.run(self.predictOp, feed_dict={self.positiveInput: self.getVector(predicate)})
 
     ##########
 

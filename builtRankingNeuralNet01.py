@@ -16,12 +16,12 @@ print ("finished loading word2vec")
 
 
 #create NN class
-#300 hidden nodes
-#10 training epochs
-#tanh activation
-#cross_entropy loss
+#400 hidden nodes
+#1 training epochs
+#sigmoid activation
+#ranking loss
 #decayed learning rate
-testNN = nn.RankingNeuralNet(embeddingClass=w2v, vectorSize=w2v.getVectorSize(),hiddenNodes=400, outputNodes=1, trainingEpochs=10, activationFunction="tanh", costFunction="crossEntropy", learningRate=None)
+testNN = nn.RankingNeuralNet(embeddingClass=w2v, vectorSize=w2v.getVectorSize(),hiddenNodes=400, outputNodes=1, trainingEpochs=1, activationFunction="sigmoid", learningRate=None)
 
 
 #loading true predicates
@@ -35,20 +35,20 @@ testNN.negPredicates = pickle.load(f)
 f.close()
 
 
-#build full dataset
-print("building dataset")
-testNN.buildDataset()
+#build full dataset - only for AutoEncoder
+# print("building dataset")
+# testNN.buildDatasetAE()
 
-#build empty variables for restoring
-importedW1 = tf.Variable(tf.zeros([testNN.inputDimensions, testNN.hiddenNodes]))
-importedb1 = tf.Variable(tf.zeros([1, testNN.hiddenNodes]))
-
-#load variables into empties
-testNN.loadVariables("Variables/variables_AutoEncoder_preds2_400-tanh-loss-decayedLR-10iters", variableName="W1", targetName=importedW1)
-testNN.loadVariables("Variables/variables_AutoEncoder_preds2_400-tanh-loss-decayedLR-10iters", variableName="b1", targetName=importedb1)
+# #build empty variables for restoring
+# importedW1 = tf.Variable(tf.zeros([testNN.inputDimensions, testNN.hiddenNodes]))
+# importedb1 = tf.Variable(tf.zeros([1, testNN.hiddenNodes]))
+#
+# #load variables into empties
+# testNN.loadVariables("Variables/variables_AutoEncoder_preds2_400-tanh-loss-decayedLR-10iters", variableName="W1", targetName=importedW1)
+# testNN.loadVariables("Variables/variables_AutoEncoder_preds2_400-tanh-loss-decayedLR-10iters", variableName="b1", targetName=importedb1)
 
 #create all parameters for NN (including initializing W1 and b1 from Autoencoder)
-testNN.initializeParameters(useAutoEncoder=True, existingW1=importedW1, existingB1=importedb1)
+testNN.initializeParameters(useAutoEncoder=False)
 
 #build computational graph
 print("build computational graph")
@@ -68,7 +68,7 @@ if __name__ == "__main__":
 
 
     #save parameters
-    testNN.saveVariables("Variables/rankingAttempt01")
+    # testNN.saveVariables("Variables/rankingAttempt01")
 
 
 
