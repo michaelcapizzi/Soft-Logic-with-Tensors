@@ -124,6 +124,7 @@ def feedForwardGeneralized(inputX, numberOfLayers, weightsDict, biasesDict, acti
 ###################
 #remaining logistics
 ###################
+
 def initializeVars():
     return tf.initialize_all_variables().run()
 
@@ -193,7 +194,7 @@ def train(data, tfSession, mergedOp, accuracyOp, optimizer, trainFeed, testFeed,
             writer.add_summary(summaryString, i)
             print("accuracy at step %s: %s" %(i, accuracyReport))
         else:   #continue training as normal
-            tfSession.run(optimizer, feed=trainFeed)
+            tfSession.run(optimizer, feed_dict=trainFeed)
     #print final accuracy
     print(accuracyOp.eval(testFeed))
 

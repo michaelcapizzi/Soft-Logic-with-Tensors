@@ -22,7 +22,7 @@ print ("finished loading word2vec")
 #cross_entropy loss
 #decayed learning rate
 testNN = nn.NeuralNet(embeddingClass=w2v, vectorSize=w2v.getVectorSize(),hiddenNodes=400, outputNodes=2, trainingEpochs=10, activationFunction="tanh", costFunction="crossEntropy", learningRate=None)
-
+testNN = nn.RankingNeuralNet(emb)
 
 #loading true predicates
 f = open("Predicates/FILTERED-predicatesNoWiki.pickle", "rb")

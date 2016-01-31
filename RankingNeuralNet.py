@@ -14,7 +14,7 @@ import random
 class RankingNeuralNet:
     """
     builds neural network to be fed predicates (using ranking cost function)
-        number of classes ==> binary but with softmax layers
+        number of classes ==> one output, representing true probability (false = 1 - true)
         :param embeddingClass ==> the embedding class from which the word2vecs can be loaded
         :param vectorSize ==> length of each individual embedding vector
         :param learningRate ==> for gradient descent
@@ -33,11 +33,11 @@ class RankingNeuralNet:
         #textual data
         self.predicates = None
         self.negPredicates = None
-        self.allPredicates = []
-        self.predLabels = []
-        self.skippedPredicates = []     #for predicates who have no vectors
+        # self.allPredicates = []
+        # self.predLabels = []
+        # self.skippedPredicates = []     #for predicates who have no vectors
         #NN input and label data
-        self.predVectors = []           #only used to batch convert predicates
+        # self.predVectors = []           #only used to batch convert predicates
         #hyperparameters
         if not learningRate:            #if no learning rate is set, use exponential_decay
             self.learningRate = tf.train.exponential_decay(
@@ -61,12 +61,14 @@ class RankingNeuralNet:
         self.biases =   {}
         self.positiveInput = tf.placeholder("float", name="posInput", shape=[None, self.inputDimensions])
         self.negativeInput = tf.placeholder("float", name="negInput", shape=[None, self.inputDimensions])
-        self.label = tf.placeholder("float", name="trueProb", shape=[None, outputNodes])
+        self.aePlaceholder = tf.placeholder("float", name="aeInput", shape=[None, self.inputDimensions])            #placeholder only to be used by autoencoder
         #computation graph
         self.init = tf.initialize_all_variables()           #TODO must be done manually ???
         self.ffPosOp = None
         self.ffNegOp = None
         self.costOp = None
+        #TODO this can't be done here.  must be done later?
+        # self.costSummary = tf.scalar_summary("cost", self.costOp)
         self.gradientOp = None
         self.predictOp = None
         #Tensorflow session
@@ -77,22 +79,22 @@ class RankingNeuralNet:
     #utils
     ##############################################################################
 
-    #pickle thing
-    def pickle(self, thing, fname):
-        f = open(fname + ".pickle", "wb")
-        pickle.dump(thing, f)
-        f.close()
-
-    #TODO remove or fix - doesn't work
-    #unpickle thing
-    def unpickle(self, fname):
-        f = open(fname + ".pickle", "rb")
-        thing = pickle.load(fname)
-        f.close()
-        #return thing
-        return thing
-
-    ########
+    # #pickle thing
+    # def pickle(self, thing, fname):
+    #     f = open(fname + ".pickle", "wb")
+    #     pickle.dump(thing, f)
+    #     f.close()
+    #
+    # #TODO remove or fix - doesn't work
+    # #unpickle thing
+    # def unpickle(self, fname):
+    #     f = open(fname + ".pickle", "rb")
+    #     thing = pickle.load(fname)
+    #     f.close()
+    #     #return thing
+    #     return thing
+    #
+    # ########
 
     #TODO fix or dump -- doesn't work
     #load embeddings
@@ -273,7 +275,7 @@ class RankingNeuralNet:
         saver.save(self.session, fname + ".ckpt")
 
 
-        #load variable
+    #load variable
         #  if variableName is None loads all variables from saved
         #  note: all variables to be loaded must be built with zeros first!
     def loadVariables(self, fname, variableName=None, targetName=None):
@@ -424,8 +426,9 @@ class RankingNeuralNet:
     #predict
     def predict(self, feedforwardOp):
         # softmax = tf.nn.softmax(feedforwardOp, name="Softmax")
-        softmax = tf.nn.tanh(feedforwardOp, name="TanhOutput")
-        return softmax
+        sigmoid = tf.nn.sigmoid(feedforwardOp, name="SigmoidOutput")
+        # return softmax
+        return sigmoid
 
     # #############################################################################
     # build ops
@@ -461,6 +464,10 @@ class RankingNeuralNet:
 
         #initial average cost
         avgCost = 0
+
+        #initialize writer
+        writer = tf.train.SummaryWriter("summary_logs", self.session.graph_def)
+
         #training epoch
         for epoch in range(self.trainingEpochs):
             #stochastic gradient descent
@@ -475,6 +482,7 @@ class RankingNeuralNet:
                 #reshape vector
                 # vector = vector.reshape((1,vector.shape[0]))
                 #training step
+                #TODO how to do autoencoder when two predicates have come through?  Make its own method?
                 if isAutoEncoder:
                     self.session.run(self.gradientOp, feed_dict={self.input: vector, self.label: vector})
                 else:
@@ -491,6 +499,9 @@ class RankingNeuralNet:
                 if (i + epoch) % 500 == 0:              #will ensure that different predicates appear for debugging at each iteration
                     print("positive predicate in: ", posPred)
                     print("negative predicate in: ", negPred)
+                    #write to summary
+                    writer.add_summary(self.costSummary, i)
+
                     # if isAutoEncoder:
                     #     print("predicate out: ", self.getClosestPredicate(self.session.run(self.ffOp, feed_dict={self.input: vector}).reshape((600,)),topN, True))
                     # else:

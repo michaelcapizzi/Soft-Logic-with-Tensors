@@ -68,7 +68,7 @@ if __name__ == "__main__":
 
 
     #save parameters
-    testNN.saveVariables("Variables/variables_NN_preds2_400-tanh-crossEntropy-decayedLR-10iters")
+    testNN.saveVariables("Variables/rankingAttempt01")
 
 
 
