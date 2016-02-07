@@ -14,11 +14,14 @@ print ("finished loading word2vec")
 f = open("Predicates/FILTERED-predicatesNoWiki.pickle", "rb")
 posPredicates = pickle.load(f)
 f.close()
+print(len(posPredicates))
 
 #loading false predicates
 f = open("Predicates/FILTERED-negative_predicatesNoWiki.pickle", "rb")
 negPredicates = pickle.load(f)
 f.close()
+print(len(negPredicates))
+
 
 ##########################
 ##########################
@@ -70,15 +73,16 @@ def getVector(predicate):
 ######################################
 
 def manualCost(pos, neg):
-    return np.max(np.array([0.0, 1 - pos - neg]))
+    return np.max(np.array([0.0, margin - pos + neg]))
 
 #############################################
 
+margin = 1.0
 vectorSize = w2v.getVectorSize()
 inputDimensions = 3 * vectorSize
 outputDimensions = 1
 hiddenNodes = 300
-epochs = 10
+epochs = 100
 learningRate = tf.train.exponential_decay(
         learning_rate=0.01,
         global_step= 1,
@@ -91,7 +95,8 @@ sess = tf.Session()
 writer = tf.train.SummaryWriter("summary_logs", sess.graph_def)
 
 #placeholders
-inputPlaceholder = tf.placeholder("float", name="inputs", shape=[2, inputDimensions])
+# inputPlaceholder = tf.placeholder("float", name="inputs", shape=[2, inputDimensions])
+inputPlaceholder = tf.placeholder("float", name="inputs", shape=[None, inputDimensions])
 
 #variables
 weights = {}
@@ -124,12 +129,12 @@ def feedForward(inputX):
 
     #z2
     z2 =    tf.add  (
-                tf.matmul   (
-                        a1,
-                        weights["W2"]
-                ),
-                biases["b2"]
-                ,name="HiddenToOutput")
+            tf.matmul   (
+                    a1,
+                    weights["W2"]
+            ),
+            biases["b2"]
+            ,name="HiddenToOutput")
 
     #a2
     a2 = tf.nn.sigmoid(z2, name="OutputActivation")
@@ -147,35 +152,59 @@ neg = getVector(negPredicates[0])
 
 testInput = np.array([pos, neg]).reshape((2,600))
 
+
+
 sess.run(tf.initialize_all_variables())
+defaultGraph = tf.get_default_graph()
+
 
 #cost
-costOp = tf.maximum(0.0, 1 - tf.reduce_sum(ffOp))
+costOp = tf.maximum(
+                    0.0,
+                    margin - tf.squeeze(ffOp)[0] + tf.squeeze(ffOp)[1]       #squeeze allows indexing of ffOp output
+)
+
 costSummary = tf.scalar_summary("cost", costOp)
 
 #training
-# gradientOp = tf.train.GradientDescentOptimizer(learningRate).minimize(costOp)
-gradientOp1 = tf.train.GradientDescentOptimizer(learningRate).compute_gradients(costOp)
-gradientOp2 = tf.train.GradientDescentOptimizer(learningRate).apply_gradients(gradientOp1)
-# gradientSummary = tf.histogram_summary("gradient", gradientOp)
+gradientOp = tf.train.GradientDescentOptimizer(learningRate).minimize(costOp)
+
 
 merged = tf.merge_all_summaries()
 
+#TODO determine convergence?  whole epoch with no weight updates?
 for i in range(epochs):
     for j in range(len(posPredicates)):
-        posPred = posPredicates[i]
-        negPred = negPredicates[i]
+    # for j in range(10):
+        posPred = posPredicates[j]
+        negPred = negPredicates[j]
         posVector = getVector(posPred)
         negVector = getVector(negPred)
         #run gradient descent
-        sess.run(gradientOp2, feed_dict={inputPlaceholder: np.array([posVector, negVector]).reshape((2,600))})
+        sess.run(gradientOp, feed_dict={inputPlaceholder: np.array([posVector, negVector]).reshape((2,600))})
         if (i + j) % 500 == 0:
-            print i
-            preds, cost, summ = sess.run([ffOp, costOp, merged], feed_dict={inputPlaceholder: np.array([posVector, negVector]).reshape((2,600))})
-            print(i, "pos-predicate output: ", preds[0])
-            print(i, "neg-predicate output: ", preds[1])
-            print(i, "manual cost: ", manualCost(preds[0], preds[1]))
-            print(i, "tf cost: ", cost)
-            writer.add_summary(summ, i)
+            if __name__ == "main":      #log summary only if main
+                preds, cost, summ = sess.run([ffOp, costOp, merged], feed_dict={inputPlaceholder: np.array([posVector, negVector]).reshape((2,600))})
+                print(i)
+                print("pos-predicate: ", posPred)
+                print(j, "pos-predicate output: ", preds[0])
+                print("neg-predicate: ", negPred)
+                print(j, "neg-predicate output: ", preds[1])
+                print(j, "cost: ", cost)
+                writer.add_summary(summ, i*j)
+            else:
+                preds, cost = sess.run([ffOp, costOp], feed_dict={inputPlaceholder: np.array([posVector, negVector]).reshape((2,600))})
+                print(i)
+                print("pos-predicate: ", posPred)
+                print(j, "pos-predicate output: ", preds[0])
+                print("neg-predicate: ", negPred)
+                print(j, "neg-predicate output: ", preds[1])
+                print(j, "cost: ", cost)
 
+#tensorboard --logdir=/path/to/log-directory
 
+#TODO fix - still throws errors for certain vectors
+def getLikelihood(predicate):
+    vector = getVector(predicate)
+    likelihood = sess.run(ffOp, feed_dict={inputPlaceholder: np.array(vector).reshape((1,600))})
+    return likelihood
