@@ -2,6 +2,7 @@ import tensorflow as tf
 import Embedding as e
 import pickle
 import numpy as np
+import random
 
 #create Embedding class
 w2v = e.Embedding()
@@ -14,13 +15,11 @@ print ("finished loading word2vec")
 f = open("Predicates/FILTERED-predicatesNoWiki.pickle", "rb")
 posPredicates = pickle.load(f)
 f.close()
-print(len(posPredicates))
 
 #loading false predicates
 f = open("Predicates/FILTERED-negative_predicatesNoWiki.pickle", "rb")
 negPredicates = pickle.load(f)
 f.close()
-print(len(negPredicates))
 
 
 ##########################
@@ -79,27 +78,34 @@ def manualCost(pos, neg):
 
 margin = 0.5
 summaryStep = 500
-logTitle = "600in_1000hidden_10epochs"
+logTitle = "600in_300hidden_10epochs5margin_randomized_consecutive_smallerLearningRate_staircaseFalse"
 # batchSize = 20
 vectorSize = w2v.getVectorSize()
 inputDimensions = 3 * vectorSize
 outputDimensions = 1
-hiddenNodes = 1000
+hiddenNodes = 300
 epochs = 10
 learningRate = tf.train.exponential_decay(
-        learning_rate=0.01,
+        learning_rate=0.001,
+        # learning_rate=0.0008,
+        # learning_rate=0.0005,
         global_step= 1,
-        decay_steps=50000,   #should be size of data: estimated at 50k
+        # decay_steps=50000,   #should be size of data: estimated at 50k
+        decay_steps=len(posPredicates),   #should be size of data: estimated at 27k
         decay_rate= 0.95,
-        staircase=True
+        # staircase=True
+        staircase=False
 )
+
 
 sess = tf.Session()
 writer = tf.train.SummaryWriter("summary_logs/" + logTitle + "/", sess.graph_def)
 
 #placeholders
 # inputPlaceholder = tf.placeholder("float", name="inputs", shape=[2, inputDimensions])
-inputPlaceholder = tf.placeholder("float", name="inputs", shape=[None, inputDimensions])
+inputPlaceholderPos = tf.placeholder("float", name="inputsPos", shape=[None, inputDimensions])
+inputPlaceholderNeg = tf.placeholder("float", name="inputsNeg", shape=[None, inputDimensions])
+# inputPlaceholder = tf.placeholder("float", name="inputs", shape=[None, None, inputDimensions])
 
 #variables
 weights = {}
@@ -147,24 +153,36 @@ def feedForward(inputX):
     #positive predicate, negative predicate
     return a2
 
-ffOp = feedForward(inputPlaceholder)
+# ffOp = feedForward(inputPlaceholderPos), feedForward(inputPlaceholderNeg)       #this will require me to reload the variables into a new graph for predictions
+# ffOp = tf.squeeze(tf.convert_to_tensor(np.array([feedForward(inputPlaceholderPos), feedForward(inputPlaceholderNeg)])))       #this will require me to reload the variables into a new graph for predictions
+ffOp = feedForward(inputPlaceholderPos), feedForward(inputPlaceholderNeg)      #this will require me to reload the variables into a new graph for predictions
 
 #testing
 pos = getVector(posPredicates[0])
 neg = getVector(negPredicates[0])
 
-testInput = np.array([pos, neg]).reshape((2,600))
+print("pos: ", pos.shape)
+print("neg: ", neg.shape)
 
+posTensor = tf.convert_to_tensor(pos)
+negTensor = tf.convert_to_tensor(neg)
 
+print("posTensor: ", posTensor._shape)
+print("negTensor: ", negTensor._shape)
 
 sess.run(tf.initialize_all_variables())
 defaultGraph = tf.get_default_graph()
 
+#method to convert output of ffOp for costOp
+def convert(ffOpOutput):
+    return np.array(ffOpOutput).reshape((2,))
 
 #cost
 costOp = tf.maximum(
                     0.0,
-                    margin - tf.squeeze(ffOp)[0] + tf.squeeze(ffOp)[1]       #squeeze allows indexing of ffOp output
+                    margin - tf.squeeze(ffOp[0]) + tf.squeeze(ffOp[1])       #squeeze allows indexing of ffOp output
+                    # margin - convert(ffOp)[0] + convert(ffOp)[1]       #squeeze allows indexing of ffOp output
+                    # margin - ffOp[0] + ffOp[1]       #squeeze allows indexing of ffOp output
 )
 
 costSummary = tf.scalar_summary("cost", costOp)
@@ -179,27 +197,37 @@ step = 0
 # numBatches = len(posPredicates) / batchSize
 
 for i in range(epochs):
-    # for j in range(len(posPredicates)):
-    for j in range(numBatches):
-        # batchLowerIDX = j * batchSize
-        # batchUpperIDX = (j + 1) * batchSize
+    #randomize list
+    random.shuffle(posPredicates)
+    random.shuffle(negPredicates)
+    for j in range(len(posPredicates)):
+    # for j in range(numBatches):
+    #     batchLowerIDX = j * batchSize
+    #     batchUpperIDX = (j + 1) * batchSize
         posPred = posPredicates[j]
         # posPred = posPredicates[batchLowerIDX: batchUpperIDX]
         negPred = negPredicates[j]
         # negPred = negPredicates[batchLowerIDX: batchUpperIDX]
         posVector = getVector(posPred)
+        # posVector = [getVector(posPred) for p in posPred]
         negVector = getVector(negPred)
+        # negVector = [getVector(negPred) for p in negPred]
         #run gradient descent
-        sess.run(gradientOp, feed_dict={inputPlaceholder: np.array([posVector, negVector]).reshape((2,600))})
+        sess.run(gradientOp, feed_dict={inputPlaceholderPos: posVector, inputPlaceholderNeg: negVector})
         if j % summaryStep == 0:
-            preds, cost, summ = sess.run([ffOp, costOp, merged], feed_dict={inputPlaceholder: np.array([posVector, negVector]).reshape((2,600))})
+            # preds, cost, summ = sess.run([ffOp, costOp, merged], feed_dict={inputPlaceholderPos: posVector, inputPlaceholderNeg: negVector})
+            preds = sess.run(ffOp, feed_dict={inputPlaceholderPos: posVector, inputPlaceholderNeg: negVector})
+            cost = sess.run(costOp, feed_dict={inputPlaceholderPos: posVector, inputPlaceholderNeg: negVector})
+            summ = sess.run(merged, feed_dict={inputPlaceholderPos: posVector, inputPlaceholderNeg: negVector})
             print(i)
             print("pos-predicate: ", posPred)
             print(j, "pos-predicate output: ", preds[0])
             print("neg-predicate: ", negPred)
             print(j, "neg-predicate output: ", preds[1])
             print(j, "cost: ", cost)
-            writer.add_summary(summ, step)
+            # print(j, "manual cost", manualCost(posVector, negVector))
+            if __name__ == "__main__":
+                writer.add_summary(summ, step)
         step += 1
 
 
@@ -208,5 +236,5 @@ for i in range(epochs):
 #TODO fix - still throws errors for certain vectors
 def getLikelihood(predicate):
     vector = getVector(predicate)
-    likelihood = sess.run(ffOp, feed_dict={inputPlaceholder: np.array(vector).reshape((1,600))})
+    likelihood = sess.run(ffOp, feed_dict={inputPlaceholderPos: np.array(vector).reshape((1,600)), inputPlaceholderNeg: np.array(vector).reshape((1,600))})
     return likelihood
