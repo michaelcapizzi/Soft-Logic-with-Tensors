@@ -77,12 +77,15 @@ def manualCost(pos, neg):
 
 #############################################
 
-margin = 1.0
+margin = 0.5
+summaryStep = 500
+logTitle = "600in_1000hidden_10epochs"
+# batchSize = 20
 vectorSize = w2v.getVectorSize()
 inputDimensions = 3 * vectorSize
 outputDimensions = 1
-hiddenNodes = 300
-epochs = 100
+hiddenNodes = 1000
+epochs = 10
 learningRate = tf.train.exponential_decay(
         learning_rate=0.01,
         global_step= 1,
@@ -92,7 +95,7 @@ learningRate = tf.train.exponential_decay(
 )
 
 sess = tf.Session()
-writer = tf.train.SummaryWriter("summary_logs", sess.graph_def)
+writer = tf.train.SummaryWriter("summary_logs/" + logTitle + "/", sess.graph_def)
 
 #placeholders
 # inputPlaceholder = tf.placeholder("float", name="inputs", shape=[2, inputDimensions])
@@ -172,34 +175,33 @@ gradientOp = tf.train.GradientDescentOptimizer(learningRate).minimize(costOp)
 
 merged = tf.merge_all_summaries()
 
-#TODO determine convergence?  whole epoch with no weight updates?
+step = 0
+# numBatches = len(posPredicates) / batchSize
+
 for i in range(epochs):
-    for j in range(len(posPredicates)):
-    # for j in range(10):
+    # for j in range(len(posPredicates)):
+    for j in range(numBatches):
+        # batchLowerIDX = j * batchSize
+        # batchUpperIDX = (j + 1) * batchSize
         posPred = posPredicates[j]
+        # posPred = posPredicates[batchLowerIDX: batchUpperIDX]
         negPred = negPredicates[j]
+        # negPred = negPredicates[batchLowerIDX: batchUpperIDX]
         posVector = getVector(posPred)
         negVector = getVector(negPred)
         #run gradient descent
         sess.run(gradientOp, feed_dict={inputPlaceholder: np.array([posVector, negVector]).reshape((2,600))})
-        if (i + j) % 500 == 0:
-            if __name__ == "main":      #log summary only if main
-                preds, cost, summ = sess.run([ffOp, costOp, merged], feed_dict={inputPlaceholder: np.array([posVector, negVector]).reshape((2,600))})
-                print(i)
-                print("pos-predicate: ", posPred)
-                print(j, "pos-predicate output: ", preds[0])
-                print("neg-predicate: ", negPred)
-                print(j, "neg-predicate output: ", preds[1])
-                print(j, "cost: ", cost)
-                writer.add_summary(summ, i*j)
-            else:
-                preds, cost = sess.run([ffOp, costOp], feed_dict={inputPlaceholder: np.array([posVector, negVector]).reshape((2,600))})
-                print(i)
-                print("pos-predicate: ", posPred)
-                print(j, "pos-predicate output: ", preds[0])
-                print("neg-predicate: ", negPred)
-                print(j, "neg-predicate output: ", preds[1])
-                print(j, "cost: ", cost)
+        if j % summaryStep == 0:
+            preds, cost, summ = sess.run([ffOp, costOp, merged], feed_dict={inputPlaceholder: np.array([posVector, negVector]).reshape((2,600))})
+            print(i)
+            print("pos-predicate: ", posPred)
+            print(j, "pos-predicate output: ", preds[0])
+            print("neg-predicate: ", negPred)
+            print(j, "neg-predicate output: ", preds[1])
+            print(j, "cost: ", cost)
+            writer.add_summary(summ, step)
+        step += 1
+
 
 #tensorboard --logdir=/path/to/log-directory
 
