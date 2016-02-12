@@ -80,7 +80,8 @@ def manualCost(pos, neg):
 margin = 0.5
 summaryStep = 500
 logTitle = "600in_300hidden_30epochs5margin_randomize_consecutive_staticLearningRate_staircaseFalse_batch1_withVariableSummaries"
-batchSize = len(posPredicates)
+# batchSize = len(posPredicates)
+batchSize = 20
 repeatSize = 20
 vectorSize = w2v.getVectorSize()
 inputDimensions = 3 * vectorSize
@@ -181,21 +182,24 @@ def convert(ffOpOutput):
 
 #cost
 #TODO reduce mean for cost in batch?
-costOp = tf.reduce_mean(
-        tf.maximum(
-                    0.0,
-                    margin - tf.squeeze(ffOp[0]) + tf.squeeze(ffOp[1])       #squeeze allows indexing of ffOp output
-                    # margin - convert(ffOp)[0] + convert(ffOp)[1]       #squeeze allows indexing of ffOp output
-                    # margin - ffOp[0] + ffOp[1]       #squeeze allows indexing of ffOp output
-))
-# costOp = tf.maximum(
-#                 0.0,
-#                 margin - tf.squeeze(ffOp[0]) + tf.squeeze(ffOp[1])       #squeeze allows indexing of ffOp output
-#                 # margin - convert(ffOp)[0] + convert(ffOp)[1]       #squeeze allows indexing of ffOp output
-#                 # margin - ffOp[0] + ffOp[1]       #squeeze allows indexing of ffOp output
-# )
+# costOp = tf.reduce_sum(
+#         tf.maximum(
+#                     0.0,
+#                     margin - tf.squeeze(ffOp[0]) + tf.squeeze(ffOp[1])       #squeeze allows indexing of ffOp output
+#                     # margin - convert(ffOp)[0] + convert(ffOp)[1]       #squeeze allows indexing of ffOp output
+#                     # margin - ffOp[0] + ffOp[1]       #squeeze allows indexing of ffOp output
+# ))
 
-costSummary = tf.scalar_summary("cost", costOp)
+costOp = tf.maximum(
+                0.0,
+                margin - tf.squeeze(ffOp[0]) + tf.squeeze(ffOp[1])       #squeeze allows indexing of ffOp output
+                # margin - convert(ffOp)[0] + convert(ffOp)[1]       #squeeze allows indexing of ffOp output
+                # margin - ffOp[0] + ffOp[1]       #squeeze allows indexing of ffOp output
+)
+
+costEvalOp = tf.reduce_sum(costOp)
+# costSummary = tf.scalar_summary("cost", costOp)
+costSummary = tf.scalar_summary("cost", costEvalOp)
 # costSummary = tf.histogram_summary("cost", costOp)
 
 #training
@@ -205,10 +209,21 @@ w1Summary = tf.histogram_summary("W1", weights["W1"].eval(session=sess))
 w2Summary = tf.histogram_summary("W2", weights["W2"].eval(session=sess))
 b1Summary = tf.histogram_summary("b1", biases["b1"].eval(session=sess))
 b2Summary = tf.histogram_summary("b2", biases["b2"].eval(session=sess))
+
 merged = tf.merge_all_summaries()
 
 step = 0
 numBatches = len(posPredicates) / batchSize
+
+initialW1 = weights["W1"].eval(session=sess)
+initialW2 = weights["W2"].eval(session=sess)
+initialb1 = biases["b1"].eval(session=sess)
+initialb2 = biases["b2"].eval(session=sess)
+
+allPosVector = [getVector(posPredicates[p]) for p in range(len(posPredicates))]
+allNegVector = [getVector(negPredicates[p]) for p in range(len(negPredicates))]
+allPosArrays = np.array(allPosVector).reshape((len(posPredicates), inputDimensions))
+allNegArrays = np.array(allNegVector).reshape((len(negPredicates), inputDimensions))
 
 for i in range(epochs):
     #randomize list
@@ -216,36 +231,48 @@ for i in range(epochs):
     negPredicatesMultiplied = negPredicates * repeatSize
     random.shuffle(negPredicatesMultiplied)
     random.shuffle(negPredicates)
-    for j in range(len(posPredicates)):
+    # for j in range(len(posPredicates)):
         # random.shuffle(negPredicates)
-    # for j in range(numBatches):
-    #     batchLowerIDX = j * batchSize
-        # batchUpperIDX = (j + 1) * batchSize
-        posPred = posPredicates[j]
-        # posPred = posPredicates[batchLowerIDX: batchUpperIDX]
+    for j in range(numBatches):
+        batchLowerIDX = j * batchSize
+        batchUpperIDX = (j + 1) * batchSize
+        # posPred = posPredicates[j]
+        posPred = posPredicates[batchLowerIDX: batchUpperIDX]
         # posPred = list(itertools.repeat(posPredicates[j], repeatSize))
-        negPred = negPredicates[j]
-        # negPred = negPredicates[batchLowerIDX: batchUpperIDX]
+        # negPred = negPredicates[j]
+        negPred = negPredicates[batchLowerIDX: batchUpperIDX]
         # negPred = negPredicates[:repeatSize]
-        posVector = getVector(posPred)
-        # posVector = [getVector(posPred[p]) for p in range(len(posPred))]
-        negVector = getVector(negPred)
-        # negVector = [getVector(negPred[p]) for p in range(len(negPred))]
-        # posArrays = np.array(posVector).reshape((batchSize, inputDimensions))
-        # posArrays = np.array(posVector).reshape((batchSize, inputDimensions))
+        # posVector = getVector(posPred)
+        posVector = [getVector(posPred[p]) for p in range(len(posPred))]
+        # negVector = getVector(negPred)
+        negVector = [getVector(negPred[p]) for p in range(len(negPred))]
+        posArrays = np.array(posVector).reshape((batchSize, inputDimensions))
         # posArrays = np.array(posVector).reshape((repeatSize, inputDimensions))
+        negArrays = np.array(negVector).reshape((batchSize, inputDimensions))
         # negArrays = np.array(negVector).reshape((repeatSize, inputDimensions))
         #run gradient descent
-        sess.run(gradientOp, feed_dict={inputPlaceholderPos: posVector, inputPlaceholderNeg: negVector})
-        # sess.run(gradientOp, feed_dict={inputPlaceholderPos: posArrays, inputPlaceholderNeg: posArrays})
+        # sess.run(gradientOp, feed_dict={inputPlaceholderPos: posVector, inputPlaceholderNeg: negVector})
+        sess.run(gradientOp, feed_dict={inputPlaceholderPos: posArrays, inputPlaceholderNeg: negArrays})
         if j % summaryStep == 0:
             # preds, cost, summ = sess.run([ffOp, costOp, merged], feed_dict={inputPlaceholderPos: posVector, inputPlaceholderNeg: negVector})
-            preds = sess.run(ffOp, feed_dict={inputPlaceholderPos: posVector, inputPlaceholderNeg: negVector})
-            # preds = sess.run(ffOp, feed_dict={inputPlaceholderPos: posArrays, inputPlaceholderNeg: negArrays})
-            cost = sess.run(costOp, feed_dict={inputPlaceholderPos: posVector, inputPlaceholderNeg: negVector})
+            # preds = sess.run(ffOp, feed_dict={inputPlaceholderPos: posVector, inputPlaceholderNeg: negVector})
+            preds = sess.run(ffOp, feed_dict={inputPlaceholderPos: posArrays, inputPlaceholderNeg: negArrays})
+            # cost = sess.run(costOp, feed_dict={inputPlaceholderPos: posVector, inputPlaceholderNeg: negVector})
+            # cost = sess.run(costEvalOp, feed_dict={inputPlaceholderPos: posVector, inputPlaceholderNeg: negVector})
+            # cost = sess.run(costEvalOp, feed_dict={inputPlaceholderPos: posArrays, inputPlaceholderNeg: negArrays})
+            cost = sess.run(costEvalOp, feed_dict={inputPlaceholderPos: allPosArrays, inputPlaceholderNeg: allNegArrays})
             # cost = sess.run(costOp, feed_dict={inputPlaceholderPos: posArrays, inputPlaceholderNeg: negArrays})
-            summ = sess.run(merged, feed_dict={inputPlaceholderPos: posVector, inputPlaceholderNeg: negVector})
+            # summ = sess.run(merged, feed_dict={inputPlaceholderPos: posVector, inputPlaceholderNeg: negVector})
             # summ = sess.run(merged, feed_dict={inputPlaceholderPos: posArrays, inputPlaceholderNeg: negArrays})
+            summ = sess.run(merged, feed_dict={inputPlaceholderPos: allPosArrays, inputPlaceholderNeg: allNegArrays})
+            currentW1 = weights["W1"].eval(session=sess)
+            currentW2 = weights["W2"].eval(session=sess)
+            currentb1 = biases["b1"].eval(session=sess)
+            currentb2 = biases["b2"].eval(session=sess)
+            print("difference in W1:", np.mean(currentW1 - initialW1))
+            print("difference in W2:", np.mean(currentW2 - initialW2))
+            print("difference in b1:", np.mean(currentb1 - initialb1))
+            print("difference in b2:", np.mean(currentb2 - initialb2))
             # print(i)
             # print("pos-predicate: ", posPred)
             # print(j, "pos-predicate output: ", preds[0])
