@@ -79,20 +79,21 @@ def manualCost(pos, neg):
 
 margin = 0.5
 summaryStep = 500
-logTitle = "600in_1000hidden_10epochs"
+logTitle = "SGD_checkVariablesUpdates"
 # batchSize = 20
 vectorSize = w2v.getVectorSize()
 inputDimensions = 3 * vectorSize
 outputDimensions = 1
-hiddenNodes = 1000
+hiddenNodes = 300
 epochs = 10
-learningRate = tf.train.exponential_decay(
-        learning_rate=0.01,
-        global_step= 1,
-        decay_steps=50000,   #should be size of data: estimated at 50k
-        decay_rate= 0.95,
-        staircase=True
-)
+# learningRate = tf.train.exponential_decay(
+#         learning_rate=0.001,
+#         global_step= 1,
+#         decay_steps=50000,   #should be size of data: estimated at 50k
+#         decay_rate= 0.95,
+#         staircase=True
+# )
+learningRate = .001
 
 sess = tf.Session()
 writer = tf.train.SummaryWriter("summary_logs/" + logTitle + "/", sess.graph_def)
@@ -169,9 +170,14 @@ costOp = tf.maximum(
 
 costSummary = tf.scalar_summary("cost", costOp)
 
+
 #training
 gradientOp = tf.train.GradientDescentOptimizer(learningRate).minimize(costOp)
 
+w1Summary = tf.histogram_summary("W1", weights["W1"].eval(session=sess))
+w2Summary = tf.histogram_summary("W2", weights["W2"].eval(session=sess))
+b1Summary = tf.histogram_summary("b1", biases["b1"].eval(session=sess))
+b2Summary = tf.histogram_summary("b2", biases["b2"].eval(session=sess))
 
 merged = tf.merge_all_summaries()
 
@@ -179,8 +185,8 @@ step = 0
 # numBatches = len(posPredicates) / batchSize
 
 for i in range(epochs):
-    # for j in range(len(posPredicates)):
-    for j in range(numBatches):
+    for j in range(len(posPredicates)):
+    # for j in range(numBatches):
         # batchLowerIDX = j * batchSize
         # batchUpperIDX = (j + 1) * batchSize
         posPred = posPredicates[j]
