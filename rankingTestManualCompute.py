@@ -76,39 +76,38 @@ def manualCost(pos, neg):
     return np.max(np.array([0.0, margin - pos + neg]))
 
 #############################################
-
+dataLength = len(posPredicates)
 margin = 0.5
 summaryStep = 500
-logTitle = "600in_300hidden_30epochs5margin_randomize_consecutive_staticLearningRate_staircaseFalse_batch1_withVariableSummaries"
+# logTitle = "600in_600hidden_10epochs5margin_randomize_consecutive_01learningRateExpDecay_batch20"
+logTitle = "test"
 # batchSize = len(posPredicates)
 batchSize = 20
-repeatSize = 20
+numBatches = dataLength / batchSize
 vectorSize = w2v.getVectorSize()
 inputDimensions = 3 * vectorSize
 outputDimensions = 1
 hiddenNodes = 300
-epochs = 30
-# learningRate = tf.train.exponential_decay(
-#         learning_rate=0.001,
-#         # learning_rate=0.0008,
-#         global_step= 1,
-#         # decay_steps=50000,   #should be size of data: estimated at 50k
-#         decay_steps=len(posPredicates),   #should be size of data: estimated at 27k
-#         decay_rate= 0.95,
-#         # staircase=True
-#         staircase=False
-# )
-learningRate = 0.001
+epochs = 10
+learningRate = tf.train.exponential_decay(
+        learning_rate=0.01,
+        # learning_rate=0.0008,
+        global_step= 1,
+        # decay_steps=len(posPredicates),   #should be total number of steps that will be taken during training
+        decay_steps= epochs * numBatches,   #should be total number of steps that will be taken during training
+        decay_rate= 0.95,
+        # staircase=True
+        staircase=False
+)
+# learningRate = 0.001
 
 
 sess = tf.Session()
 writer = tf.train.SummaryWriter("summary_logs/" + logTitle + "/", sess.graph_def)
 
 #placeholders
-# inputPlaceholder = tf.placeholder("float", name="inputs", shape=[2, inputDimensions])
 inputPlaceholderPos = tf.placeholder("float", name="inputsPos", shape=[None, inputDimensions])
 inputPlaceholderNeg = tf.placeholder("float", name="inputsNeg", shape=[None, inputDimensions])
-# inputPlaceholder = tf.placeholder("float", name="inputs", shape=[None, None, inputDimensions])
 
 #variables
 weights = {}
@@ -159,26 +158,28 @@ def feedForward(inputX):
 # ffOp = feedForward(inputPlaceholderPos), feedForward(inputPlaceholderNeg)       #this will require me to reload the variables into a new graph for predictions
 # ffOp = tf.squeeze(tf.convert_to_tensor(np.array([feedForward(inputPlaceholderPos), feedForward(inputPlaceholderNeg)])))       #this will require me to reload the variables into a new graph for predictions
 ffOp = feedForward(inputPlaceholderPos), feedForward(inputPlaceholderNeg)      #this will require me to reload the variables into a new graph for predictions
+ffPosSummary = tf.histogram_summary("feedForwardPos", ffOp[0])
+ffNegSummary = tf.histogram_summary("feedForwardNeg", ffOp[1])
 
 #testing
-pos = getVector(posPredicates[0])
-neg = getVector(negPredicates[0])
-
-print("pos: ", pos.shape)
-print("neg: ", neg.shape)
-
-posTensor = tf.convert_to_tensor(pos)
-negTensor = tf.convert_to_tensor(neg)
-
-print("posTensor: ", posTensor._shape)
-print("negTensor: ", negTensor._shape)
+# pos = getVector(posPredicates[0])
+# neg = getVector(negPredicates[0])
+#
+# print("pos: ", pos.shape)
+# print("neg: ", neg.shape)
+#
+# posTensor = tf.convert_to_tensor(pos)
+# negTensor = tf.convert_to_tensor(neg)
+#
+# print("posTensor: ", posTensor._shape)
+# print("negTensor: ", negTensor._shape)
 
 sess.run(tf.initialize_all_variables())
 defaultGraph = tf.get_default_graph()
 
 #method to convert output of ffOp for costOp
-def convert(ffOpOutput):
-    return np.array(ffOpOutput).reshape((2,))
+# def convert(ffOpOutput):
+#     return np.array(ffOpOutput).reshape((2,))
 
 #cost
 #TODO reduce mean for cost in batch?
@@ -196,29 +197,31 @@ costOp = tf.maximum(
                 # margin - convert(ffOp)[0] + convert(ffOp)[1]       #squeeze allows indexing of ffOp output
                 # margin - ffOp[0] + ffOp[1]       #squeeze allows indexing of ffOp output
 )
+# costSummary = tf.histogram_summary("cost", costOp)
 
 costEvalOp = tf.reduce_sum(costOp)
-# costSummary = tf.scalar_summary("cost", costOp)
-costSummary = tf.scalar_summary("cost", costEvalOp)
-# costSummary = tf.histogram_summary("cost", costOp)
+# costEvalSummary = tf.scalar_summary("costEval", costEvalOp)
 
 #training
 gradientOp = tf.train.GradientDescentOptimizer(learningRate).minimize(costOp)
+# gradientSummary = tf.histogram_summary("gradient", gradientOp)
 
-w1Summary = tf.histogram_summary("W1", weights["W1"].eval(session=sess))
-w2Summary = tf.histogram_summary("W2", weights["W2"].eval(session=sess))
-b1Summary = tf.histogram_summary("b1", biases["b1"].eval(session=sess))
-b2Summary = tf.histogram_summary("b2", biases["b2"].eval(session=sess))
+w1Summary = tf.histogram_summary("W1", tf.reduce_sum(weights["W1"].eval(session=sess)))
+w2Summary = tf.histogram_summary("W2", tf.reduce_sum(weights["W2"].eval(session=sess)))
+b1Summary = tf.histogram_summary("b1", tf.reduce_sum(biases["b1"].eval(session=sess)))
+b2Summary = tf.histogram_summary("b2", tf.reduce_sum(biases["b2"].eval(session=sess)))
 
 merged = tf.merge_all_summaries()
 
 step = 0
-numBatches = len(posPredicates) / batchSize
 
-initialW1 = weights["W1"].eval(session=sess)
-initialW2 = weights["W2"].eval(session=sess)
-initialb1 = biases["b1"].eval(session=sess)
-initialb2 = biases["b2"].eval(session=sess)
+print(batchSize)
+print(numBatches)
+
+# initialW1 = weights["W1"].eval(session=sess)
+# initialW2 = weights["W2"].eval(session=sess)
+# initialb1 = biases["b1"].eval(session=sess)
+# initialb2 = biases["b2"].eval(session=sess)
 
 allPosVector = [getVector(posPredicates[p]) for p in range(len(posPredicates))]
 allNegVector = [getVector(negPredicates[p]) for p in range(len(negPredicates))]
@@ -228,8 +231,6 @@ allNegArrays = np.array(allNegVector).reshape((len(negPredicates), inputDimensio
 for i in range(epochs):
     #randomize list
     random.shuffle(posPredicates)
-    negPredicatesMultiplied = negPredicates * repeatSize
-    random.shuffle(negPredicatesMultiplied)
     random.shuffle(negPredicates)
     # for j in range(len(posPredicates)):
         # random.shuffle(negPredicates)
@@ -238,18 +239,14 @@ for i in range(epochs):
         batchUpperIDX = (j + 1) * batchSize
         # posPred = posPredicates[j]
         posPred = posPredicates[batchLowerIDX: batchUpperIDX]
-        # posPred = list(itertools.repeat(posPredicates[j], repeatSize))
         # negPred = negPredicates[j]
         negPred = negPredicates[batchLowerIDX: batchUpperIDX]
-        # negPred = negPredicates[:repeatSize]
         # posVector = getVector(posPred)
         posVector = [getVector(posPred[p]) for p in range(len(posPred))]
         # negVector = getVector(negPred)
         negVector = [getVector(negPred[p]) for p in range(len(negPred))]
         posArrays = np.array(posVector).reshape((batchSize, inputDimensions))
-        # posArrays = np.array(posVector).reshape((repeatSize, inputDimensions))
         negArrays = np.array(negVector).reshape((batchSize, inputDimensions))
-        # negArrays = np.array(negVector).reshape((repeatSize, inputDimensions))
         #run gradient descent
         # sess.run(gradientOp, feed_dict={inputPlaceholderPos: posVector, inputPlaceholderNeg: negVector})
         sess.run(gradientOp, feed_dict={inputPlaceholderPos: posArrays, inputPlaceholderNeg: negArrays})
@@ -265,14 +262,14 @@ for i in range(epochs):
             # summ = sess.run(merged, feed_dict={inputPlaceholderPos: posVector, inputPlaceholderNeg: negVector})
             # summ = sess.run(merged, feed_dict={inputPlaceholderPos: posArrays, inputPlaceholderNeg: negArrays})
             summ = sess.run(merged, feed_dict={inputPlaceholderPos: allPosArrays, inputPlaceholderNeg: allNegArrays})
-            currentW1 = weights["W1"].eval(session=sess)
-            currentW2 = weights["W2"].eval(session=sess)
-            currentb1 = biases["b1"].eval(session=sess)
-            currentb2 = biases["b2"].eval(session=sess)
-            print("difference in W1:", np.mean(currentW1 - initialW1))
-            print("difference in W2:", np.mean(currentW2 - initialW2))
-            print("difference in b1:", np.mean(currentb1 - initialb1))
-            print("difference in b2:", np.mean(currentb2 - initialb2))
+            # currentW1 = weights["W1"].eval(session=sess)
+            # currentW2 = weights["W2"].eval(session=sess)
+            # currentb1 = biases["b1"].eval(session=sess)
+            # currentb2 = biases["b2"].eval(session=sess)
+            # print("difference in W1:", np.mean(currentW1 - initialW1))
+            # print("difference in W2:", np.mean(currentW2 - initialW2))
+            # print("difference in b1:", np.mean(currentb1 - initialb1))
+            # print("difference in b2:", np.mean(currentb2 - initialb2))
             # print(i)
             # print("pos-predicate: ", posPred)
             # print(j, "pos-predicate output: ", preds[0])
@@ -282,7 +279,7 @@ for i in range(epochs):
             # print(j, "manual cost", manualCost(posVector, negVector))
             if __name__ == "__main__":
                 writer.add_summary(summ, step)
-        step += 1
+        step += batchSize
 
 
 #tensorboard --logdir=/path/to/log-directory
