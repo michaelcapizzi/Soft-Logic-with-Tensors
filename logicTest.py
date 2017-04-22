@@ -23,5 +23,10 @@ domain2BiPreds = {"loves": [("mary", "john"), ("john", "john"), ("mary", "mary")
 ############################################
 
 mod1 = m.LogicModel(domain1El, domain1UnPreds, domain1BiPreds)
+mod1.buildAll()
 
-mod2 = m.LogicModel(domain2El, dictionaryOfBinaryPredicates=domain2BiPreds)
+#mod2 = m.LogicModel(domain2El, dictionaryOfBinaryPredicates=domain2BiPreds)
+
+tom_mathematician = mod1.unaryOp("is_mathematician", "tom")
+
+print("Tom is a mathematician:\n {}".format(tom_mathematician))
