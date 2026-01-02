@@ -47,3 +47,8 @@ atlassian-ide-plugin.xml
 com_crashlytics_export_strings.xml
 crashlytics.properties
 crashlytics-build.properties
+
+# Python
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
