@@ -127,11 +127,40 @@ class LogicModel:
         for pred in self.unaryPredicateMatrices.keys():
             self.unaryPredicateMatrices[pred] = np.insert(self.unaryPredicateMatrices[pred], self.unaryPredicateMatrices[pred].shape[1], 0, 1)
 
+        #binary predicates
+        for pred in self.binaryPredicateTensors.keys():
+            #expand tensor
+            self.binaryPredicateTensors[pred] = np.insert(self.binaryPredicateTensors[pred], self.binaryPredicateTensors[pred].shape[2], 0, axis=2)
+            self.binaryPredicateTensors[pred] = np.insert(self.binaryPredicateTensors[pred], self.binaryPredicateTensors[pred].shape[1], 0, axis=1)
+            #update false side of tensor (dim = 1) to be 1 for new element
+            self.binaryPredicateTensors[pred][1, self.sizeOfDomain - 1, :] = 1
+            self.binaryPredicateTensors[pred][1, :, self.sizeOfDomain - 1] = 1
+
         #adds element to appropriate predicates in unaryPredicateMatrices and unaryPredicateLookUp
+        #and binaryPredicateTensors and binaryPredicateLookUp
+        element = tupleToAdd[0]
         if len(tupleToAdd[1]) != 0:
             for item in tupleToAdd[1]:
-                self.updateUnaryPredicate(tupleToAdd[0], item)
-                self.unaryPredicateLookUp[item].append(tupleToAdd[0])
+                if isinstance(item, str):
+                    self.updateUnaryPredicate(element, item)
+                    self.unaryPredicateLookUp[item].append(element)
+                elif isinstance(item, tuple) and len(item) == 3:
+                    # item structure: (predicate, otherElement, 'subject'/'object')
+                    # 'subject' means new element is subject
+                    # 'object' means new element is object
+                    pred = item[0]
+                    other = item[1]
+                    role = item[2]
+
+                    if role == 'subject':
+                        pair = (element, other)
+                    elif role == 'object':
+                        pair = (other, element)
+                    else:
+                        continue
+
+                    self.updateBinaryPredicate(pair, pred)
+                    self.binaryPredicateLookUp[pred].append(pair)
 
 
     #remove from domain
