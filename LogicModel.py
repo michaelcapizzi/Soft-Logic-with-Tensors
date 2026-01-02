@@ -20,7 +20,7 @@ class LogicModel:
         self.sizeOfDomain = len(self.elements)
         self.domainMatrix = np.zeros((self.sizeOfDomain, self.sizeOfDomain))        #each row is a one-hot
         #unary predicates
-        self.unaryPredicateLookUp = dictionaryOfUnaryPredicates
+        self.unaryPredicateLookUp = self._normalizeUnaryPredicates(dictionaryOfUnaryPredicates)
         self.unaryPredicateMatrices = {}
         #binary predicates
         self.binaryPredicateLookUp = dictionaryOfBinaryPredicates
@@ -45,6 +45,22 @@ class LogicModel:
                                             [1.,0.,0.,1.],
                                             [1.,1.,0.,0.]
                                         ]).reshape((2,2,2))
+
+    def _normalizeUnaryPredicates(self, dictionaryOfUnaryPredicates):
+        normalized = {}
+        for pred, elements in dictionaryOfUnaryPredicates.items():
+            normalized[pred] = {}
+            if isinstance(elements, dict):
+                normalized[pred] = elements.copy()
+            elif isinstance(elements, list):
+                for item in elements:
+                    if isinstance(item, tuple) and len(item) == 2 and (isinstance(item[1], float) or isinstance(item[1], int)):
+                        # (element, probability)
+                        normalized[pred][item[0]] = float(item[1])
+                    else:
+                        # element
+                        normalized[pred][item] = 1.0
+        return normalized
 
 ######################################################
 
@@ -77,7 +93,8 @@ class LogicModel:
             predMatrix = np.zeros((2, self.sizeOfDomain))
             for elem in self.elements:
                 if elem in self.unaryPredicateLookUp[pred]:      #if the predicate applies to the element
-                    predMatrix[:,self.elementLookUp[elem]] = self.isTrue.T
+                    prob = self.unaryPredicateLookUp[pred][elem]
+                    predMatrix[:,self.elementLookUp[elem]] = np.array([prob, 1 - prob])
                 else:                                           #if the predicate does not apply to element
                     predMatrix[:,self.elementLookUp[elem]] = self.isFalse.T
             self.unaryPredicateMatrices[pred] = predMatrix
@@ -143,7 +160,13 @@ class LogicModel:
             for item in tupleToAdd[1]:
                 if isinstance(item, str):
                     self.updateUnaryPredicate(element, item)
-                    self.unaryPredicateLookUp[item].append(element)
+                    self.unaryPredicateLookUp[item][element] = 1.0
+                elif isinstance(item, tuple) and len(item) == 2:
+                    # (predicate, probability)
+                    pred = item[0]
+                    prob = item[1]
+                    self.updateUnaryPredicate(element, pred, prob)
+                    self.unaryPredicateLookUp[pred][element] = float(prob)
                 elif isinstance(item, tuple) and len(item) == 3:
                     # item structure: (predicate, otherElement, 'subject'/'object')
                     # 'subject' means new element is subject
@@ -192,7 +215,7 @@ class LogicModel:
 
         for pred in self.unaryPredicateLookUp:
             if element in self.unaryPredicateLookUp[pred]:
-                self.unaryPredicateLookUp[pred].remove(element)
+                del self.unaryPredicateLookUp[pred][element]
 
         #update binary predicates
         for pred in self.binaryPredicateTensors:
@@ -205,14 +228,26 @@ class LogicModel:
 
     #add unary predicate
     def addUnaryPredicate(self, predicate, listOfElements):
+        # normalize elements
+        elementsDict = {}
+        if isinstance(listOfElements, list):
+            for item in listOfElements:
+                if isinstance(item, tuple) and len(item) == 2 and (isinstance(item[1], float) or isinstance(item[1], int)):
+                    elementsDict[item[0]] = float(item[1])
+                else:
+                    elementsDict[item] = 1.0
+        elif isinstance(listOfElements, dict):
+            elementsDict = listOfElements.copy()
+
         #build predicate matrix
         predMatrix = np.zeros((2, self.sizeOfDomain))
-        for elem in listOfElements:
-            predMatrix[:,self.elementLookUp[elem]] = self.isTrue.T
+        for elem, prob in elementsDict.items():
+            if elem in self.elementLookUp:
+                predMatrix[:,self.elementLookUp[elem]] = np.array([prob, 1 - prob])
         #add matrix
         self.unaryPredicateMatrices[predicate] = predMatrix
         #add to lookup
-        self.unaryPredicateLookUp[predicate] = listOfElements
+        self.unaryPredicateLookUp[predicate] = elementsDict
 
 
     #add binary predicate
@@ -262,8 +297,8 @@ class LogicModel:
         #update in matrix
         self.unaryPredicateMatrices[predicate][:,self.elementLookUp[element]] = self.isFalse.T
         #update in lookup
-        # self.unaryPredicateLookUp[predicate] = self.unaryPredicateLookUp[predicate].remove(element)
-        self.unaryPredicateLookUp[predicate].remove(element)
+        if element in self.unaryPredicateLookUp[predicate]:
+            del self.unaryPredicateLookUp[predicate][element]
 
 
     #TODO test removal maintains truth
