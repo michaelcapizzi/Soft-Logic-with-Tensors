@@ -143,6 +143,7 @@ class LogicModel:
         #build column in all predicates
         for pred in self.unaryPredicateMatrices.keys():
             self.unaryPredicateMatrices[pred] = np.insert(self.unaryPredicateMatrices[pred], self.unaryPredicateMatrices[pred].shape[1], 0, 1)
+            self.unaryPredicateMatrices[pred][1, self.sizeOfDomain - 1] = 1
 
         #binary predicates
         for pred in self.binaryPredicateTensors.keys():
@@ -241,6 +242,7 @@ class LogicModel:
 
         #build predicate matrix
         predMatrix = np.zeros((2, self.sizeOfDomain))
+        predMatrix[1, :] = 1
         for elem, prob in elementsDict.items():
             if elem in self.elementLookUp:
                 predMatrix[:,self.elementLookUp[elem]] = np.array([prob, 1 - prob])
