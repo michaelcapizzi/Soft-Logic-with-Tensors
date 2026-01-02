@@ -164,7 +164,43 @@ class LogicModel:
 
 
     #remove from domain
-    #TODO build
+    def removeFromDomain(self, element):
+        if element not in self.elementLookUp:
+            return
+
+        #get index of element to remove
+        idx = self.elementLookUp[element]
+
+        #remove from elements list
+        self.elements.remove(element)
+        #update size of domain
+        self.sizeOfDomain -= 1
+
+        #update lookup dictionary
+        del self.elementLookUp[element]
+        for elem in self.elementLookUp:
+            if self.elementLookUp[elem] > idx:
+                self.elementLookUp[elem] -= 1
+
+        #update domain matrix
+        self.domainMatrix = np.delete(self.domainMatrix, idx, axis=0)
+        self.domainMatrix = np.delete(self.domainMatrix, idx, axis=1)
+
+        #update unary predicates
+        for pred in self.unaryPredicateMatrices:
+            self.unaryPredicateMatrices[pred] = np.delete(self.unaryPredicateMatrices[pred], idx, axis=1)
+
+        for pred in self.unaryPredicateLookUp:
+            if element in self.unaryPredicateLookUp[pred]:
+                self.unaryPredicateLookUp[pred].remove(element)
+
+        #update binary predicates
+        for pred in self.binaryPredicateTensors:
+            self.binaryPredicateTensors[pred] = np.delete(self.binaryPredicateTensors[pred], idx, axis=1)
+            self.binaryPredicateTensors[pred] = np.delete(self.binaryPredicateTensors[pred], idx, axis=2)
+
+        for pred in self.binaryPredicateLookUp:
+            self.binaryPredicateLookUp[pred] = [pair for pair in self.binaryPredicateLookUp[pred] if element not in pair]
 
 
     #add unary predicate
