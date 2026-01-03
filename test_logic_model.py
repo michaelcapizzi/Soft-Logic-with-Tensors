@@ -263,3 +263,22 @@ class TestLogicModel:
 
         hates_pred = basic_model.getBinaryPredicate("hates")
         assert hates_pred.shape == (2, 3, 3)
+    def test_remove_binary_predicate_maintains_truth(self, basic_model):
+        # Initial state: hates(tom, chris) is True
+        res = basic_model.binaryOp("hates", "tom", "chris")
+        np.testing.assert_array_equal(res, np.array([1., 0.]).reshape(2, 1))
+
+        # Initial state: hates(tom, john) is True
+        res = basic_model.binaryOp("hates", "tom", "john")
+        np.testing.assert_array_equal(res, np.array([1., 0.]).reshape(2, 1))
+
+        # Remove hates(tom, chris)
+        basic_model.removeBinaryPredicate(("tom", "chris"), "hates")
+
+        # Check hates(tom, chris) is now False
+        res = basic_model.binaryOp("hates", "tom", "chris")
+        np.testing.assert_array_equal(res, np.array([0., 1.]).reshape(2, 1))
+
+        # Check consistency: hates(tom, john) should still be True
+        res = basic_model.binaryOp("hates", "tom", "john")
+        np.testing.assert_array_equal(res, np.array([1., 0.]).reshape(2, 1))

@@ -303,7 +303,6 @@ class LogicModel:
             del self.unaryPredicateLookUp[predicate][element]
 
 
-    #TODO test removal maintains truth
     def removeBinaryPredicate(self, pair, predicate):
         #build temporary tensor
         updatedTensor = self.binaryPredicateTensors[predicate]
