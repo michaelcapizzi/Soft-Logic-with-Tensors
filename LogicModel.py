@@ -22,7 +22,10 @@ class LogicModel:
         self.elements = listOfElements
         self.elementLookUp = {}
         self.sizeOfDomain = len(self.elements)
-        self.domainMatrix = np.zeros((self.sizeOfDomain, self.sizeOfDomain))        #each row is a one-hot
+        if self.use_sparse:
+            self.domainMatrix = sp.eye(self.sizeOfDomain, format='csc')
+        else:
+            self.domainMatrix = np.zeros((self.sizeOfDomain, self.sizeOfDomain))        #each row is a one-hot
         #unary predicates
         self.unaryPredicateLookUp = self._normalizeUnaryPredicates(dictionaryOfUnaryPredicates)
         self.unaryPredicateMatrices = {}
@@ -82,47 +85,62 @@ class LogicModel:
         for elem in range(self.sizeOfDomain):
             #add to lookup dictionary
             self.elementLookUp[self.elements[elem]] = elem
-            #build one-hot vector
-            # oneHot = np.zeros((self.sizeOfDomain, 1))
-            oneHot = np.zeros(self.sizeOfDomain)
-            oneHot[elem] = 1
-            #add one-hot to domain matrix
-            self.domainMatrix[:,elem] = oneHot
+            # If sparse, domainMatrix is already built as Identity in __init__
+            if not self.use_sparse:
+                #build one-hot vector
+                # oneHot = np.zeros((self.sizeOfDomain, 1))
+                oneHot = np.zeros(self.sizeOfDomain)
+                oneHot[elem] = 1
+                #add one-hot to domain matrix
+                self.domainMatrix[:,elem] = oneHot
 
 
     #build unary predicates
     def buildUnaryPredicates(self):
         for pred in self.unaryPredicateLookUp.keys():
             if self.use_sparse:
-                # Sparse: (2, N)
-                # We can construct it as a list of data, row, col for coo_matrix or similar.
-                # Since it's 2xN, dense is probably fine too, but let's stick to sparse for consistency.
-                # Actually, 2 rows is very small. scipy.sparse is usually 2D.
-                # Let's use lil_matrix for construction then convert to csc or csr.
+                # OPTIMIZED SPARSE BUILD
+                # Default is False: [0, 1]. So row 1 should be all 1s.
+                # We construct row 1 as all 1s initially.
+                # lil_matrix is slow for filling all.
+                # Construct using coo or just fill dense then sparse if N isn't too huge?
+                # But N is large.
+                # Let's use lil_matrix but only set the True ones.
+                # Wait, default needs to be [0, 1].
+                # So we can start with a matrix where row 1 is all 1s.
+
+                # Constructing a matrix with all 1s in row 1:
+                # ones = np.ones(self.sizeOfDomain)
+                # rows = np.ones(self.sizeOfDomain)
+                # cols = np.arange(self.sizeOfDomain)
+                # coo = sp.coo_matrix((ones, (rows, cols)), shape=(2, self.sizeOfDomain))
+
+                # Using LIL for updates
                 predMatrix = sp.lil_matrix((2, self.sizeOfDomain))
+                predMatrix[1, :] = 1.0  # Set all row 1 to 1.0 (False)
+
+                # Now iterate ONLY over the elements that are True (in the lookup)
+                for elem, prob in self.unaryPredicateLookUp[pred].items():
+                    if elem in self.elementLookUp:
+                        idx = self.elementLookUp[elem]
+                        # Set to [prob, 1-prob]
+                        predMatrix[:, idx] = np.array([prob, 1 - prob]).reshape(2, 1)
+
+                self.unaryPredicateMatrices[pred] = predMatrix.tocsc()
+
             else:
                 #build predicate matrix
                 predMatrix = np.zeros((2, self.sizeOfDomain))
+                # Default is False
+                predMatrix[1, :] = 1.0
 
-            for elem in self.elements:
-                idx = self.elementLookUp[elem]
-                if elem in self.unaryPredicateLookUp[pred]:      #if the predicate applies to the element
-                    prob = self.unaryPredicateLookUp[pred][elem]
-                    if self.use_sparse:
-                        predMatrix[:, idx] = np.array([prob, 1 - prob]).reshape(2, 1)
-                    else:
+                for elem in self.elements:
+                    idx = self.elementLookUp[elem]
+                    if elem in self.unaryPredicateLookUp[pred]:      #if the predicate applies to the element
+                        prob = self.unaryPredicateLookUp[pred][elem]
                         predMatrix[:, idx] = np.array([prob, 1 - prob])
-                else:                                           #if the predicate does not apply to element
-                    if self.use_sparse:
-                        predMatrix[:, idx] = self.isFalse # .T is (1,2) but slice is (2,).
-                    else:
-                        predMatrix[:, idx] = self.isFalse.flatten()
-                    # Dense: predMatrix[:, idx] needs shape (2,). isFalse is (2,1).
-                    # Sparse: slices assignment works if dimensions match.
+                    # Else it remains False (0, 1)
 
-            if self.use_sparse:
-                self.unaryPredicateMatrices[pred] = predMatrix.tocsc()
-            else:
                 self.unaryPredicateMatrices[pred] = predMatrix
 
 
@@ -177,9 +195,13 @@ class LogicModel:
         #add to self.domainDictionary
         self.elementLookUp[tupleToAdd[0]] = self.sizeOfDomain - 1
         #add to self.domainMatrix
-        self.domainMatrix = np.insert(self.domainMatrix, self.domainMatrix.shape[1], 0, 1)      #add a column of zeros
-        self.domainMatrix = np.insert(self.domainMatrix, self.domainMatrix.shape[0], 0, 0)      #add a row of zeros
-        self.domainMatrix[self.domainMatrix.shape[0] - 1][self.domainMatrix.shape[1] - 1] = 1         #update one-hot vector
+        if self.use_sparse:
+            # Recreate identity matrix for new size
+            self.domainMatrix = sp.eye(self.sizeOfDomain, format='csc')
+        else:
+            self.domainMatrix = np.insert(self.domainMatrix, self.domainMatrix.shape[1], 0, 1)      #add a column of zeros
+            self.domainMatrix = np.insert(self.domainMatrix, self.domainMatrix.shape[0], 0, 0)      #add a row of zeros
+            self.domainMatrix[self.domainMatrix.shape[0] - 1][self.domainMatrix.shape[1] - 1] = 1         #update one-hot vector
 
     #predicates
         #build column in all predicates
@@ -261,8 +283,12 @@ class LogicModel:
                 self.elementLookUp[elem] -= 1
 
         #update domain matrix
-        self.domainMatrix = np.delete(self.domainMatrix, idx, axis=0)
-        self.domainMatrix = np.delete(self.domainMatrix, idx, axis=1)
+        if self.use_sparse:
+             # Recreate identity matrix for new size
+            self.domainMatrix = sp.eye(self.sizeOfDomain, format='csc')
+        else:
+            self.domainMatrix = np.delete(self.domainMatrix, idx, axis=0)
+            self.domainMatrix = np.delete(self.domainMatrix, idx, axis=1)
 
         #update unary predicates
         for pred in self.unaryPredicateMatrices:
